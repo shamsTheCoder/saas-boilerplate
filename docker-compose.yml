@@ -1,0 +1,71 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: saas_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-saas_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-saas_password}
+      POSTGRES_DB: ${POSTGRES_DB:-saas_db}
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+
+  redis:
+    image: redis:7-alpine
+    container_name: saas_redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD:-saas_redis_pass}
+    ports:
+      - "6381:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - internal
+
+  # NestJS API — only accessible from the internal network (not exposed publicly)
+  # In local dev, we run this via `nx serve api` directly (not via Docker)
+  # Uncomment for full Docker deployment:
+  # api:
+  #   build:
+  #     context: ./apps/api
+  #     dockerfile: Dockerfile
+  #   container_name: saas_api
+  #   restart: unless-stopped
+  #   environment:
+  #     DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+  #     REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+  #   depends_on:
+  #     - postgres
+  #     - redis
+  #   networks:
+  #     - internal  # NOT exposed to host — only reachable from Next.js
+
+  # web:
+  #   build:
+  #     context: ./apps/web
+  #     dockerfile: Dockerfile
+  #   container_name: saas_web
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3000:3000"  # Only web is exposed publicly
+  #   environment:
+  #     NEXT_PUBLIC_APP_URL: http://localhost:3000
+  #     API_INTERNAL_URL: http://api:3001  # Resolved inside Docker network
+  #   depends_on:
+  #     - api
+  #   networks:
+  #     - internal
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  internal:
+    driver: bridge
+    # In production: replace with an overlay network or private VPC
+    # NestJS API must NEVER be accessible from outside this network

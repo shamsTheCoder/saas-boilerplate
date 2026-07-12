@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================================================
+// USER & AUTH
+// =============================================================================
+
+model User {
+  id                      String                   @id @default(uuid())
+  email                   String                   @unique
+  emailVerified           Boolean                  @default(false)
+  passwordHash            String
+  name                    String?
+  avatarUrl               String?
+  onboardingComplete      Boolean                  @default(false)
+  memberships             OrgMember[]
+  refreshTokens           RefreshToken[]
+  passwordResetTokens     PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  deletedAt               DateTime?                // Soft delete — never hard-delete users
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique                       // We store the HASH, never the raw token
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+// =============================================================================
+// ORGANIZATION & MULTI-TENANCY
+// =============================================================================
+
+model Organization {
+  id               String        @id @default(uuid())
+  name             String
+  slug             String        @unique               // Used in URL: /acme-corp/dashboard
+  logoUrl          String?
+  stripeCustomerId String?
+  members          OrgMember[]
+  invitations      Invitation[]
+  subscription     Subscription?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  deletedAt        DateTime?                           // Soft delete
+}
+
+enum OrgRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+model OrgMember {
+  id             String       @id @default(uuid())
+  userId         String
+  organizationId String
+  role           OrgRole      @default(MEMBER)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+
+  @@unique([userId, organizationId])
+  @@index([userId])
+  @@index([organizationId])
+}
+
+model Invitation {
+  id             String       @id @default(uuid())
+  email          String
+  organizationId String
+  role           OrgRole
+  token          String       @unique
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  expiresAt      DateTime
+  createdAt      DateTime     @default(now())
+
+  @@unique([email, organizationId])
+}
+
+// =============================================================================
+// BILLING & SUBSCRIPTIONS
+// =============================================================================
+
+enum SubscriptionStatus {
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+}
+
+model Subscription {
+  id                   String             @id @default(uuid())
+  organizationId       String             @unique
+  planId               String             // e.g. "free", "pro", "enterprise"
+  status               SubscriptionStatus
+  stripeSubscriptionId String?            @unique
+  currentPeriodEnd     DateTime?
+  organization         Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+}
+
+// =============================================================================
+// AUDIT LOGGING
+// =============================================================================
+
+model AuditLog {
+  id             String   @id @default(uuid())
+  organizationId String
+  userId         String
+  action         String   // e.g. "user.registered", "org.created", "member.invited"
+  metadata       Json?    // Extra context as JSON
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([createdAt])
+}

@@ -1,0 +1,40 @@
+{
+  "name": "saas-boilerplate",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "nx run-many --target=serve --all --parallel",
+    "build": "nx run-many --target=build --all",
+    "lint": "nx run-many --target=lint --all",
+    "test": "nx run-many --target=test --all",
+    "db:generate": "nx run database:generate",
+    "db:migrate": "nx run database:migrate",
+    "db:studio": "nx run database:studio"
+  },
+  "devDependencies": {
+    "nx": "^20.0.0",
+    "@nx/nest": "^20.0.0",
+    "@nx/next": "^20.0.0",
+    "@nx/js": "^20.0.0",
+    "@nx/eslint": "^20.0.0",
+    "typescript": "^5.5.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.3.0"
+  },
+  "allowScripts": {
+    "nx@20.8.4": true,
+    "prisma@5.22.0": true,
+    "@prisma/client@5.22.0": true,
+    "@prisma/engines@5.22.0": true,
+    "argon2@0.40.3": true,
+    "msgpackr-extract@3.0.4": true,
+    "sharp@0.34.5": true,
+    "@parcel/watcher@2.5.6": true,
+    "esbuild@0.21.5": true,
+    "@nestjs/core@10.4.22": true,
+    "fsevents@2.3.3": true
+  }
+}
