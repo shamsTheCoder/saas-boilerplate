@@ -1,0 +1,24 @@
+/* Import the full design system in this order — tokens first, then reset, then typography */
+@import '@saas/ui/styles/tokens.css';
+@import '@saas/ui/styles/reset.css';
+@import '@saas/ui/styles/typography.css';
+
+/* App-level utilities that don't belong in any single component */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+}
