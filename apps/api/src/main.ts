@@ -6,6 +6,8 @@ import { Logger } from 'nestjs-pino';
 import helmet from 'helmet';
 import { GlobalExceptionFilter } from '@/filters/global-exception.filter';
 import { HttpAdapterHost } from '@nestjs/core';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+import cookieParser = require('cookie-parser');
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -18,6 +20,9 @@ async function bootstrap() {
 
   // Helmet adds a bunch of sensible security headers in one shot
   app.use(helmet());
+
+  // Parse cookies — required for reading the httpOnly refresh token in auth endpoints
+  app.use(cookieParser());
 
   // Every public-facing route lives under /api/v1 — easy to version later
   app.setGlobalPrefix('api');

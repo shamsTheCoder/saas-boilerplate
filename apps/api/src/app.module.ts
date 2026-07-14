@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import { PrismaModule } from '@/prisma/prisma.module';
 import { HealthModule } from '@/health/health.module';
+import { AuthModule } from '@/auth/auth.module';
 import configuration from '@/config/configuration';
 import * as Joi from 'joi';
 
@@ -47,6 +49,14 @@ import * as Joi from 'joi';
     // Core shared modules
     PrismaModule,
     HealthModule,
+    AuthModule,
+  ],
+  providers: [
+    // Apply ThrottlerGuard globally — each auth route overrides limits with @Throttle()
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}
