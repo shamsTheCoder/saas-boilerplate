@@ -1,11 +1,17 @@
-// This layout wraps every page inside the authenticated app shell.
-// proxy.ts will live here once we build auth on Day 4 —
-// it checks the JWT cookie and redirects to /login if it's missing or expired.
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+import { proxy } from '@/lib/proxy';
+import { AuthProvider } from '@/providers/auth-provider';
+
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  // 🔒 Route guard — redirects unauthenticated or expired sessions to /login.
+  // Silent token refresh happens here automatically.
+  const { userId } = await proxy();
+
   return (
-    <div>
-      {/* Sidebar and top nav go here — Day 2 scaffold, real UI on Day 4 */}
-      <main>{children}</main>
-    </div>
+    <AuthProvider user={{ userId }}>
+      <div>
+        {/* Sidebar and top nav go here on Day 6 */}
+        <main>{children}</main>
+      </div>
+    </AuthProvider>
   );
 }

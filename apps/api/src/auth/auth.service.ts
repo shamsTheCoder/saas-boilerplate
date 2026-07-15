@@ -46,31 +46,20 @@ export class AuthService implements OnModuleInit {
 
     if (existing) {
       // SECURITY: Do NOT return 409. Return identical 201 to prevent email enumeration.
-      // In production (Day 7) we send an "account already exists" email to the address.
       this.logger.info({ email: dto.email }, 'Register: email already exists — silently suppressed');
-      // STUB: EMAIL_JOB { type: 'account-already-exists', to: dto.email }
-      return { message: 'If this email is new, a verification link has been sent.' };
+      return { message: 'Registration successful.' };
     }
 
     const passwordHash = await argon2.hash(dto.password);
 
     const user = await this.prisma.user.create({
-      data: { email: dto.email, passwordHash, name: dto.name ?? null },
+      // Auto-verify email for now to allow immediate login
+      data: { email: dto.email, passwordHash, name: dto.name ?? null, emailVerified: true },
     });
 
-    // Generate and store hashed email verification token (24-hour TTL)
-    const rawToken = crypto.randomBytes(32).toString('hex');
-    const tokenHash = this.tokenService.hashToken(rawToken);
-    const expiresAt = new Date(Date.now() + VERIFY_EMAIL_TTL_MS);
+    this.logger.info({ userId: user.id, email: dto.email }, 'New user registered and auto-verified');
 
-    await this.prisma.emailVerificationToken.create({
-      data: { tokenHash, userId: user.id, expiresAt },
-    });
-
-    // STUB: EMAIL_JOB { type: 'verify-email', to: dto.email, token: rawToken }
-    this.logger.info({ type: 'verify-email', to: dto.email, token: rawToken }, 'EMAIL_JOB');
-
-    return { message: 'If this email is new, a verification link has been sent.' };
+    return { message: 'Registration successful.' };
   }
 
   // ─── login ────────────────────────────────────────────────────────────────
@@ -147,8 +136,20 @@ export class AuthService implements OnModuleInit {
     }
 
     // Rotate: delete old, create new — atomic transaction
-    const { accessToken, rawRefreshToken: newRawToken } =
-      await this.tokenService.rotateRefreshToken(tokenHash, tokenRecord.userId, familyId);
+    let accessToken: string;
+    let newRawToken: string;
+    try {
+      const rotated = await this.tokenService.rotateRefreshToken(tokenHash, tokenRecord.userId, familyId);
+      accessToken = rotated.accessToken;
+      newRawToken = rotated.rawRefreshToken;
+    } catch (err: any) {
+      if (err?.code === 'P2025') {
+        this.logger.warn({ familyId }, 'Concurrent refresh token replay detected — invalidating family');
+        await this.tokenService.invalidateFamily(familyId);
+        throw new UnauthorizedException('Session invalidated due to suspicious activity. Please log in again.');
+      }
+      throw err;
+    }
 
     this.tokenService.setRefreshCookie(res, newRawToken, familyId);
 
@@ -157,7 +158,7 @@ export class AuthService implements OnModuleInit {
 
   // ─── logout ───────────────────────────────────────────────────────────────
 
-  async logout(req: Request, res: Response, userId: string): Promise<void> {
+  async logout(req: Request, res: Response): Promise<void> {
     const rawCookie = req.cookies?.['refresh_token'] as string | undefined;
 
     if (rawCookie) {
@@ -165,12 +166,12 @@ export class AuthService implements OnModuleInit {
       if (parsed) {
         const tokenHash = this.tokenService.hashToken(parsed.rawToken);
         // Delete only this device's token — not all sessions (use "logout everywhere" for that)
-        await this.prisma.refreshToken.deleteMany({ where: { tokenHash, userId } });
+        await this.prisma.refreshToken.deleteMany({ where: { tokenHash } });
       }
     }
 
     this.tokenService.clearRefreshCookie(res);
-    this.logger.info({ userId }, 'User logged out');
+    this.logger.info('User logged out (token cleared)');
   }
 
   // ─── verify-email ─────────────────────────────────────────────────────────

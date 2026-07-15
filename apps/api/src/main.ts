@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from '@/app.module';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -10,10 +11,13 @@ import { HttpAdapterHost } from '@nestjs/core';
 import cookieParser = require('cookie-parser');
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     // pino handles all logs — we silence the default NestJS logger here
     bufferLogs: true,
   });
+
+  // Trust the proxy (Next.js BFF) so rate limiters see the real user IP
+  app.set('trust proxy', 1);
 
   // Hook up the pino logger so structured JSON logs replace the default pretty logs
   app.useLogger(app.get(Logger));

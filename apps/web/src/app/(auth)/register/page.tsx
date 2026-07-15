@@ -1,17 +1,18 @@
 'use client';
 
 import { useFormState, useFormStatus } from 'react-dom';
+import { useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { loginAction } from '@/actions/auth.actions';
+import { registerAction, FormState } from '@/actions/auth.actions';
 import { ROUTES } from '@/constants/routes';
 import styles from '../auth.module.css';
 
-const initialState = { success: false as boolean, error: '' };
+const initialState: FormState = { success: false, error: '' };
 
 const containerVariants = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.07 } },
+  visible: { transition: { staggerChildren: 0.08 } },
 };
 
 const itemVariants = {
@@ -19,14 +20,19 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] } },
 };
 
-const shakeVariants = {
-  shake: {
-    x: [-8, 8, -6, 6, -4, 4, 0],
-    transition: { duration: 0.45 },
-  },
-};
+function getPasswordStrength(pw: string): number {
+  if (!pw) return 0;
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  return score;
+}
 
-// useFormStatus must be a child of the <form>
+const strengthLabels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+const strengthColors = ['', '#ef4444', '#f97316', '#eab308', '#22c55e'];
+
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
@@ -37,20 +43,39 @@ function SubmitButton() {
       whileTap={{ scale: 0.98 }}
       whileHover={{ scale: 1.01 }}
     >
-      {pending ? (
-        <>
-          <span className={styles.spinner} />
-          Logging in…
-        </>
-      ) : (
-        'Log in'
-      )}
+      {pending ? <><span className={styles.spinner} />Creating account…</> : 'Create account'}
     </motion.button>
   );
 }
 
-export default function LoginPage() {
-  const [state, action] = useFormState(loginAction, initialState);
+export default function RegisterPage() {
+  const [state, action] = useFormState(registerAction, initialState);
+  const [password, setPassword] = useState('');
+  const strength = getPasswordStrength(password);
+
+  if (state.success && state.message) {
+    return (
+      <div className={styles.formCard}>
+        <motion.div
+          className={styles.successState}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <div className={styles.successIcon}>✉️</div>
+          <h2 className={styles.successTitle}>Check your email</h2>
+          <p className={styles.successText}>
+            We sent a verification link to your inbox.<br />
+            Click it to activate your account.
+          </p>
+          <p className={styles.formFooter} style={{ marginTop: '1.5rem' }}>
+            Already verified?{' '}
+            <Link href={ROUTES.LOGIN} className={styles.link}>Sign in</Link>
+          </p>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.formCard}>
@@ -60,8 +85,8 @@ export default function LoginPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <h1 className={styles.formTitle}>Log in to your Account</h1>
-        <p className={styles.formSubtitle}>Welcome back! Select method to log in:</p>
+        <h1 className={styles.formTitle}>Create an Account</h1>
+        <p className={styles.formSubtitle}>Sign up with your email or social accounts:</p>
       </motion.div>
 
       <div className={styles.socialGrid}>
@@ -94,19 +119,34 @@ export default function LoginPage() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
           >
             {state.error}
           </motion.div>
         )}
       </AnimatePresence>
 
-      <motion.form
-        action={action}
-        variants={shakeVariants}
-        animate={state.error ? 'shake' : ''}
-      >
+      <form action={action}>
         <motion.div variants={containerVariants} initial="hidden" animate="visible">
+          <motion.div variants={itemVariants} className={styles.formGroup}>
+            <label htmlFor="name" className={styles.formLabel}>
+              Full Name <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span>
+            </label>
+            <div className={styles.inputIconWrapper}>
+              <svg className={styles.inputIcon} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                autoComplete="name"
+                placeholder="Alice Smith"
+                className={`${styles.formInput} ${styles.inputWithIcon}`}
+              />
+            </div>
+          </motion.div>
+
           <motion.div variants={itemVariants} className={styles.formGroup}>
             <label htmlFor="email" className={styles.formLabel}>Email Address</label>
             <div className={styles.inputIconWrapper}>
@@ -137,31 +177,41 @@ export default function LoginPage() {
                 id="password"
                 name="password"
                 type="password"
-                autoComplete="current-password"
-                placeholder="••••••••"
+                autoComplete="new-password"
+                placeholder="Min 8 chars, 1 uppercase, 1 number"
                 className={`${styles.formInput} ${styles.inputWithIcon}`}
                 required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-          </motion.div>
-
-          <motion.div variants={itemVariants} className={styles.formOptionsRow}>
-            <label className={styles.checkboxLabel}>
-              <input type="checkbox" className={styles.checkbox} />
-              Remember me
-            </label>
-            <Link href={ROUTES.FORGOT_PASSWORD} className={styles.forgotLink}>Forgot password?</Link>
+            {password.length > 0 && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <div className={styles.strengthBar}>
+                  <motion.div
+                    className={styles.strengthFill}
+                    style={{ background: strengthColors[strength] }}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${strength * 25}%` }}
+                    transition={{ duration: 0.3 }}
+                  />
+                </div>
+                <p className={styles.strengthLabel} style={{ color: strengthColors[strength] || '#9ca3af' }}>
+                  {strengthLabels[strength] || 'Enter password'}
+                </p>
+              </motion.div>
+            )}
           </motion.div>
 
           <motion.div variants={itemVariants}>
             <SubmitButton />
           </motion.div>
         </motion.div>
-      </motion.form>
+      </form>
 
       <p className={styles.formFooter}>
-        Don&apos;t have an account?{' '}
-        <Link href={ROUTES.REGISTER} className={styles.link}>Create account</Link>
+        Already have an account?{' '}
+        <Link href={ROUTES.LOGIN} className={styles.link}>Sign in</Link>
       </p>
     </div>
   );

@@ -116,7 +116,7 @@ export class TokenService {
       httpOnly: true,
       secure: isProduction,
       sameSite: 'strict',
-      path: '/api/v1/auth/refresh', // Browser only sends this cookie on the refresh endpoint
+      path: '/',
       maxAge: REFRESH_TOKEN_TTL_MS, // Aligns cookie lifetime with DB token TTL
     });
   }
@@ -135,7 +135,7 @@ export class TokenService {
       httpOnly: true,
       secure: isProduction,
       sameSite: 'strict',
-      path: '/api/v1/auth/refresh',
+      path: '/',
     });
   }
 }

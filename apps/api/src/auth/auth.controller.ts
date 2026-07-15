@@ -78,14 +78,10 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Log out — deletes the refresh token and clears the cookie' })
   @ApiResponse({ status: 204, description: 'Logged out successfully' })
-  @ApiResponse({ status: 401, description: 'Missing or invalid access token' })
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    const userId = (req.user as { userId: string }).userId;
-    await this.authService.logout(req, res, userId);
+    await this.authService.logout(req, res);
   }
 
   // ─── GET /auth/verify-email ───────────────────────────────────────────────

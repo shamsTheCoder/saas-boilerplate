@@ -38,6 +38,10 @@
     "@nestjs/core@10.4.22": true,
     "fsevents@2.3.3": true
   },
+  "overrides": {
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0"
+  },
   "dependencies": {
     "cookie-parser": "^1.4.7"
   }

@@ -1,0 +1,153 @@
+.illustrationContainer {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  aspect-ratio: 1;
+  margin: 0 auto 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* subtle float animation */
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-10px); }
+}
+
+.ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 40px solid rgba(255, 255, 255, 0.4);
+  box-sizing: border-box;
+}
+
+.connectors {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.mainNode {
+  width: 100px;
+  height: 100px;
+  border: 8px solid rgba(255, 255, 255, 0.15);
+}
+
+.logoMark {
+  width: 64px;
+  height: 64px;
+  border-radius: 21px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+}
+
+.smallNode {
+  width: 64px;
+  height: 64px;
+  border: 6px solid rgba(255, 255, 255, 0.15);
+}
+
+.iconCircle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.dashboardCard {
+  position: absolute;
+  transform: translate(-15%, -50%);
+  background: white;
+  border-radius: 12px;
+  width: 220px;
+  padding: 16px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+  z-index: 3;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.cardLogo {
+  width: 24px;
+  height: 24px;
+}
+
+.cardTitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.cardRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.cardRow:last-child {
+  margin-bottom: 0;
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.line1 {
+  height: 6px;
+  border-radius: 3px;
+  background: #e5e7eb;
+  width: 100%;
+}
+
+.line2 {
+  height: 6px;
+  border-radius: 3px;
+  background: #2563eb;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .illustrationContainer { animation: none; }
+}
