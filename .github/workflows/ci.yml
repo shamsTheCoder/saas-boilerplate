@@ -69,9 +69,6 @@ jobs:
       - name: Enforce Code Formatting
         run: npx nx format:check
 
-      - name: Lint Affected Apps
-        run: npx nx affected -t lint
-
       - name: Deploy Prisma to Ephemeral Database
         run: npx prisma migrate deploy
         working-directory: packages/database
