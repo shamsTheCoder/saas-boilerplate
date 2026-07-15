@@ -60,18 +60,20 @@ async function bootstrap() {
     new PrismaExceptionFilter(),
   );
 
-  // Auto-generate Swagger docs at /api/docs — super helpful during development
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle("SaaS Boilerplate API")
-    .setDescription(
-      "Internal API consumed exclusively by the Next.js BFF layer",
-    )
-    .setVersion("1.0")
-    .addBearerAuth()
-    .build();
+  // Auto-generate Swagger docs at /api/docs — only in non-production environments
+  if (process.env.NODE_ENV !== "production") {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle("SaaS Boilerplate API")
+      .setDescription(
+        "Internal API consumed exclusively by the Next.js BFF layer",
+      )
+      .setVersion("1.0")
+      .addBearerAuth()
+      .build();
 
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup("api/docs", app, document);
+    const document = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup("api/docs", app, document);
+  }
 
   const port = process.env.API_PORT ?? 3001;
   app.enableShutdownHooks();

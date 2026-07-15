@@ -29,6 +29,20 @@ import * as Joi from "joi";
         JWT_REFRESH_SECRET: Joi.string().required(),
         JWT_ACCESS_EXPIRES_IN: Joi.string().default("15m"),
         JWT_REFRESH_EXPIRES_IN: Joi.string().default("7d"),
+        NEXT_PUBLIC_APP_URL: Joi.string()
+          .uri()
+          .default("http://localhost:3000"),
+        // Stripe — optional locally, required in production
+        STRIPE_SECRET_KEY: Joi.string().when("NODE_ENV", {
+          is: "production",
+          then: Joi.required(),
+          otherwise: Joi.optional(),
+        }),
+        STRIPE_WEBHOOK_SECRET: Joi.string().when("NODE_ENV", {
+          is: "production",
+          then: Joi.required(),
+          otherwise: Joi.optional(),
+        }),
       }),
     }),
 
