@@ -44,9 +44,6 @@
         "startTargetName": "start",
         "exportTargetName": "export"
       }
-    },
-    {
-      "plugin": "@nx/nest/plugin"
     }
   ]
 }

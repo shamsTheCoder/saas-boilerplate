@@ -15,14 +15,15 @@
     "db:studio": "nx run database:studio"
   },
   "devDependencies": {
-    "nx": "^20.0.0",
+    "@nx/eslint": "^20.0.0",
+    "@nx/js": "^20.0.0",
     "@nx/nest": "^20.0.0",
     "@nx/next": "^20.0.0",
-    "@nx/js": "^20.0.0",
-    "@nx/eslint": "^20.0.0",
-    "typescript": "^5.5.0",
+    "@types/cookie-parser": "^1.4.10",
     "eslint": "^9.0.0",
-    "prettier": "^3.3.0"
+    "nx": "^20.0.0",
+    "prettier": "^3.3.0",
+    "typescript": "^5.5.0"
   },
   "allowScripts": {
     "nx@20.8.4": true,
@@ -36,5 +37,12 @@
     "esbuild@0.21.5": true,
     "@nestjs/core@10.4.22": true,
     "fsevents@2.3.3": true
+  },
+  "overrides": {
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.7"
   }
 }

@@ -1,0 +1,120 @@
+/**
+ * Design Tokens
+ * The single source of truth for every visual decision in the app.
+ * Change a value here and it ripples through the entire UI automatically.
+ */
+
+:root {
+  /* ─── Color Palette ─────────────────────────────────────────────────────── */
+  /* Brand — a clean indigo that feels modern without being garish */
+  --color-brand-50:  #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-200: #c7d2fe;
+  --color-brand-300: #a5b4fc;
+  --color-brand-400: #818cf8;
+  --color-brand-500: #6366f1;  /* primary action color */
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca;
+  --color-brand-800: #3730a3;
+  --color-brand-900: #312e81;
+
+  /* Neutrals — used for text, borders, backgrounds */
+  --color-gray-50:  #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+  --color-gray-950: #030712;
+
+  /* Semantic — these are what the components actually use */
+  --color-bg:           #ffffff;
+  --color-bg-subtle:    var(--color-gray-50);
+  --color-bg-muted:     var(--color-gray-100);
+  --color-surface:      #ffffff;
+  --color-surface-raised: #ffffff;
+
+  --color-border:       var(--color-gray-200);
+  --color-border-strong: var(--color-gray-300);
+
+  --color-text:         var(--color-gray-900);
+  --color-text-muted:   var(--color-gray-500);
+  --color-text-subtle:  var(--color-gray-400);
+  --color-text-inverse: #ffffff;
+
+  --color-primary:      var(--color-brand-500);
+  --color-primary-hover: var(--color-brand-600);
+  --color-primary-fg:   #ffffff;
+
+  /* Status colors */
+  --color-success:  #10b981;
+  --color-warning:  #f59e0b;
+  --color-error:    #ef4444;
+  --color-info:     #3b82f6;
+
+  /* ─── Spacing Scale (4px base) ──────────────────────────────────────────── */
+  --space-0:   0px;
+  --space-1:   4px;
+  --space-2:   8px;
+  --space-3:   12px;
+  --space-4:   16px;
+  --space-5:   20px;
+  --space-6:   24px;
+  --space-8:   32px;
+  --space-10:  40px;
+  --space-12:  48px;
+  --space-16:  64px;
+  --space-20:  80px;
+  --space-24:  96px;
+  --space-32:  128px;
+
+  /* ─── Border Radius ─────────────────────────────────────────────────────── */
+  --radius-sm:   4px;
+  --radius-md:   6px;
+  --radius-lg:   8px;
+  --radius-xl:   12px;
+  --radius-2xl:  16px;
+  --radius-full: 9999px;
+
+  /* ─── Shadows ────────────────────────────────────────────────────────────── */
+  --shadow-sm:  0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md:  0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg:  0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl:  0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+  /* ─── Z-Index Layers ─────────────────────────────────────────────────────── */
+  /* Named layers so nothing ever plays "what z-index wins?" */
+  --z-base:     0;
+  --z-raised:   10;
+  --z-dropdown: 100;
+  --z-sticky:   200;
+  --z-overlay:  300;
+  --z-modal:    400;
+  --z-toast:    500;
+
+  /* ─── Transitions ───────────────────────────────────────────────────────── */
+  --transition-fast:   150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow:   400ms ease;
+}
+
+/* Dark mode — same semantic tokens, different values */
+/* Components use var(--color-bg), not #ffffff, so they flip automatically */
+[data-theme="dark"] {
+  --color-bg:           var(--color-gray-950);
+  --color-bg-subtle:    var(--color-gray-900);
+  --color-bg-muted:     var(--color-gray-800);
+  --color-surface:      var(--color-gray-900);
+  --color-surface-raised: var(--color-gray-800);
+
+  --color-border:       var(--color-gray-800);
+  --color-border-strong: var(--color-gray-700);
+
+  --color-text:         var(--color-gray-50);
+  --color-text-muted:   var(--color-gray-400);
+  --color-text-subtle:  var(--color-gray-500);
+}

@@ -31,10 +31,13 @@ model User {
 model RefreshToken {
   id        String   @id @default(uuid())
   tokenHash String   @unique                       // We store the HASH, never the raw token
+  familyId  String                                 // Groups all rotations of one login session — enables reuse detection
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   createdAt DateTime @default(now())
+
+  @@index([familyId])
 }
 
 model PasswordResetToken {
