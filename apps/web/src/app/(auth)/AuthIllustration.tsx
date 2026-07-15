@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { SiNextdotjs, SiNestjs, SiStripe } from 'react-icons/si';
 import { LuLayers } from 'react-icons/lu';

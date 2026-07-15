@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+'use client';
+
 import Link from "next/link";
 import {
   LuShieldCheck,
@@ -36,12 +37,6 @@ import {
 import s from "./page.module.css";
 import { ROUTES } from "@/constants";
 import { DemoCard } from "./DemoCard";
-
-export const metadata: Metadata = {
-  title: "SaaS Boilerplate — Ship faster, scale smarter",
-  description:
-    "A production-ready SaaS starter with auth, multi-tenancy, and Stripe billing. Built on NestJS, Next.js 14, PostgreSQL, and Redis.",
-};
 
 // The bar heights for the fake chart in the demo card
 const BAR_HEIGHTS = [30, 55, 40, 70, 50, 90, 65, 80, 45, 100, 75, 60];
@@ -214,7 +209,7 @@ export default function HomePage() {
           Clone the repo, run docker-compose up, and you're live in under 5
           minutes.
         </p>
-        <Link href={ROUTES.signup} className={s.ctaBannerBtn}>
+        <Link href={ROUTES.REGISTER} className={s.ctaBannerBtn}>
           Create your account <LuArrowRight size={16} />
         </Link>
       </div>
