@@ -101,7 +101,7 @@ model Invitation {
   email          String
   organizationId String
   role           OrgRole
-  token          String       @unique
+  tokenHash      String       @unique
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   expiresAt      DateTime
   createdAt      DateTime     @default(now())

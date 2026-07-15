@@ -16,9 +16,9 @@
     "baseUrl": ".",
     "paths": {
       "@saas/database": ["packages/database/index.ts"],
-      "@saas/ui": ["packages/ui/index.ts"],
+      "@saas/env": ["packages/env/index.ts"],
       "@saas/types": ["packages/types/index.ts"],
-      "@saas/env": ["packages/env/index.ts"]
+      "@saas/ui": ["packages/ui/index.ts"]
     }
   },
   "exclude": ["node_modules", "dist", ".next"]

@@ -1,0 +1,119 @@
+name: CI / CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ==========================================
+  # 1. MONOREPO QUALITY & DATABASE INTEGRITY
+  # ==========================================
+  test-and-lint:
+    name: Nx Affected (Lint, Test, Build)
+    runs-on: ubuntu-latest
+
+    # Best-in-Class: Ephemeral Database for testing
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: prisma
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: testing_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    env:
+      DATABASE_URL: postgresql://prisma:password@localhost:5432/testing_db?schema=public
+      REDIS_URL: redis://localhost:6379
+      JWT_SECRET: testing-secret-key-123
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required for Nx Affected to compare Git diffs
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Cache Nx
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.cache/nx
+          key: nx-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            nx-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npm run db:generate
+
+      # Best-in-Class: Nx Affected computes exactly what changed
+      - name: Derive appropriate SHAs for Nx affected
+        uses: nrwl/nx-set-shas@v4
+
+      - name: Enforce Code Formatting
+        run: npx nx format:check
+
+      - name: Deploy Prisma to Ephemeral Database
+        run: npx prisma migrate deploy
+        working-directory: packages/database
+
+      - name: Run E2E & Unit Tests on Affected Apps
+        run: npx nx affected -t test
+
+      - name: Build Affected Apps
+        run: npx nx affected -t build
+
+  # ==========================================
+  # 2. SECURITY (SAST & SECRET SCANNING)
+  # ==========================================
+  security-scan:
+    name: CodeQL & Secret Scan
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required for deep secret scanning
+
+      # Best-in-Class: Secret Scanning
+      - name: TruffleHog Secret Scan
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+
+      # Best-in-Class: GitHub Native SAST
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript"

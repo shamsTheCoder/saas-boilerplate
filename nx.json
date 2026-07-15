@@ -35,15 +35,5 @@
       "cache": false
     }
   },
-  "plugins": [
-    {
-      "plugin": "@nx/next/plugin",
-      "options": {
-        "buildTargetName": "build",
-        "devTargetName": "serve",
-        "startTargetName": "start",
-        "exportTargetName": "export"
-      }
-    }
-  ]
+  "plugins": []
 }
