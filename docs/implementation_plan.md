@@ -7,29 +7,32 @@ This document is the final, production-grade blueprint for an enterprise-grade, 
 ## 1. Architecture & Design Principles
 
 ### The "Hybrid BFF" Design Pattern
+
 We implement a **Hybrid BFF** pattern using Next.js Server Actions and React Server Components (RSC):
 
 - **Data Fetching (Reads)**: RSC fetches data from NestJS during SSR — instant loads, perfect SEO.
 - **Data Mutations (Writes)**: Next.js Server Actions act as the BFF layer.
-  - *Flow:* Browser → Next.js Server Action → NestJS API
+  - _Flow:_ Browser → Next.js Server Action → NestJS API
   - The Next.js server holds `httpOnly` JWT cookies and forwards them to NestJS. The browser never sees the raw JWT.
 - **Network Isolation**: NestJS lives in a private Docker network, only reachable by the Next.js server. Never exposed to the public internet.
 - **URL-based Org Context**: Active organization is encoded in the URL as `[orgSlug]` (e.g., `/acme-corp/dashboard`). Deep-linkable, shareable, and avoids fragile header-based tenant detection.
 
 ### Tech Stack
-| Layer | Technology |
-|---|---|
-| Backend API | NestJS, PostgreSQL, Prisma, Redis, BullMQ, Docker |
-| Frontend | Next.js 14+ (App Router), React, TypeScript |
+
+| Layer           | Technology                                                    |
+| --------------- | ------------------------------------------------------------- |
+| Backend API     | NestJS, PostgreSQL, Prisma, Redis, BullMQ, Docker             |
+| Frontend        | Next.js 14+ (App Router), React, TypeScript                   |
 | API Type Safety | Orval (auto-generates typed fetch client from NestJS Swagger) |
-| Design System | Vanilla CSS (CSS Modules), Radix UI (headless), Framer Motion |
-| Package Manager | npm workspaces + NX |
+| Design System   | Vanilla CSS (CSS Modules), Radix UI (headless), Framer Motion |
+| Package Manager | npm workspaces + NX                                           |
 
 ---
 
 ## 2. Folder Structures
 
 ### 2A. Root Monorepo
+
 ```text
 /
 ├── apps/
@@ -64,8 +67,10 @@ We implement a **Hybrid BFF** pattern using Next.js Server Actions and React Ser
 ```
 
 **Turborepo v2 Pipeline (`turbo.json`)**
+
 > [!WARNING]
 > Turborepo v2+ uses `"tasks"` NOT `"pipeline"`. The old key is silently ignored and builds will not cache.
+
 ```json
 {
   "$schema": "https://turbo.build/schema.json",
@@ -84,6 +89,7 @@ We implement a **Hybrid BFF** pattern using Next.js Server Actions and React Ser
 ---
 
 ### 2B. NestJS Backend (`apps/api/`)
+
 ```text
 apps/api/
 ├── src/
@@ -323,6 +329,7 @@ apps/web/
 ---
 
 **`@` Path Alias (`tsconfig.json`)**
+
 ```json
 {
   "compilerOptions": {
@@ -335,15 +342,16 @@ apps/web/
 ```
 
 **Import Rules**:
+
 ```ts
 // Always use @ alias
-import { proxy } from '@/lib/proxy';
-import { ROUTES } from '@/constants/routes';
-import { useCurrentOrg } from '@/hooks/use-current-org';
-import { loginAction } from '@/actions/auth.actions';
+import { proxy } from "@/lib/proxy";
+import { ROUTES } from "@/constants/routes";
+import { useCurrentOrg } from "@/hooks/use-current-org";
+import { loginAction } from "@/actions/auth.actions";
 
 // Never use deep relative paths
-import { proxy } from '../../../lib/proxy'; // forbidden
+import { proxy } from "../../../lib/proxy"; // forbidden
 ```
 
 ---
@@ -380,7 +388,7 @@ Root layout.tsx          (fonts, ThemeProvider, AuthProvider)
 
 ## 3. Database Schema (Prisma)
 
-*(In `packages/database/prisma/schema.prisma`)*
+_(In `packages/database/prisma/schema.prisma`)_
 
 ```prisma
 generator client {
@@ -521,6 +529,7 @@ model AuditLog {
 ## 4. Implementation Phases
 
 ### Phase 1: Foundation (Monorepo, Docker, Shared Packages)
+
 - Initialize `pnpm` workspaces and `turbo.json` with Turborepo v2 `tasks` syntax.
 - Initialize `packages/database` (Prisma schema + type-only exports).
 - Initialize `packages/ui` (CSS Variables, reset, typography).
@@ -530,6 +539,7 @@ model AuditLog {
 - Scaffold all `constants/`, `hooks/`, `providers/` directories with placeholder files.
 
 ### Phase 2: Complete Auth & BFF Architecture
+
 - Backend: `argon2` hashing, JWT access/refresh strategy.
 - Backend: All token flows — Email Verification, Password Reset, Refresh.
 - Orval: Configure to read NestJS Swagger and generate typed API client.
@@ -537,6 +547,7 @@ model AuditLog {
 - Frontend: Login, Signup, Forgot Password, Reset Password, Verify Email pages.
 
 ### Phase 3: Dashboard, Multi-Tenancy & Feature Gating
+
 - Backend: Organizations, Invitations, RBAC Guards, Audit Logging.
 - Backend: `@RequirePlan('pro')` guard for billing-gated routes.
 - Frontend: App Shell (Sidebar, Header), `[orgSlug]` URL pattern, OrgProvider.
@@ -544,12 +555,14 @@ model AuditLog {
 - Frontend: Onboarding Wizard, Invitation acceptance page (`/invite/[token]`).
 
 ### Phase 4: SaaS Features (Adapters & Billing)
+
 - Backend: BullMQ queue, Email Adapter (Resend/Nodemailer), Storage Adapter (S3/Local).
 - Frontend: Drag-and-drop avatar upload, toast notifications.
 - Stripe: Checkout sessions, Webhook controller (isolated raw body parsing).
 - Frontend: Animated Pricing page, Stripe Checkout integration.
 
 ### Phase 5: Verification, CI/CD & Deployment
+
 - **DB Migration**: `prisma migrate deploy` runs as a pre-boot entrypoint in Docker.
 - Backend: E2E tests — auth flows, refresh cycle, plan gating, invitation acceptance.
 - Frontend: Vitest + React Testing Library for component tests.

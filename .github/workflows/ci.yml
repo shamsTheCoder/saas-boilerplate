@@ -13,7 +13,7 @@ jobs:
   test-and-lint:
     name: Nx Affected (Lint, Test, Build)
     runs-on: ubuntu-latest
-    
+
     # Best-in-Class: Ephemeral Database for testing
     services:
       postgres:
@@ -49,7 +49,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: "npm"
 
       - name: Cache Nx
         uses: actions/cache@v4
@@ -117,38 +117,3 @@ jobs:
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:javascript"
-
-  # ==========================================
-  # 3. PERFORMANCE BUNDLE ANALYSIS
-  # ==========================================
-  bundle-analysis:
-    name: Next.js Bundle Analysis
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write # Required to post bundle size comments on PRs
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build Next.js Frontend
-        run: npx nx build web
-        env:
-          ANALYZE: true
-
-      # Best-in-Class: Tracks frontend bundle size over time
-      - name: Analyze Bundle Sizes
-        uses: hashicorp/nextjs-bundle-analysis@v1
-        with:
-          workflow_id: bundle-analysis
-          base_branch: main
-          # Nx Monorepos output Next.js apps to dist/apps/web
-          build_dir: dist/apps/web/.next 

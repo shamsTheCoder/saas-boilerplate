@@ -1,16 +1,16 @@
-import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
-import { ConfigModule } from '@nestjs/config';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { LoggerModule } from 'nestjs-pino';
-import { PrismaModule } from '@/prisma/prisma.module';
-import { HealthModule } from '@/health/health.module';
-import { AuthModule } from '@/auth/auth.module';
-import { OrganizationsModule } from '@/modules/organizations/organizations.module';
-import { AuditModule } from '@/modules/audit/audit.module';
-import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
-import configuration from '@/config/configuration';
-import * as Joi from 'joi';
+import { Module } from "@nestjs/common";
+import { APP_GUARD } from "@nestjs/core";
+import { ConfigModule } from "@nestjs/config";
+import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
+import { LoggerModule } from "nestjs-pino";
+import { PrismaModule } from "@/prisma/prisma.module";
+import { HealthModule } from "@/health/health.module";
+import { AuthModule } from "@/auth/auth.module";
+import { OrganizationsModule } from "@/modules/organizations/organizations.module";
+import { AuditModule } from "@/modules/audit/audit.module";
+import { JwtAuthGuard } from "@/auth/jwt-auth.guard";
+import configuration from "@/config/configuration";
+import * as Joi from "joi";
 
 @Module({
   imports: [
@@ -19,24 +19,26 @@ import * as Joi from 'joi';
       isGlobal: true,
       load: [configuration],
       validationSchema: Joi.object({
-        NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
+        NODE_ENV: Joi.string()
+          .valid("development", "production", "test")
+          .default("development"),
         API_PORT: Joi.number().default(3001),
         DATABASE_URL: Joi.string().required(),
         REDIS_URL: Joi.string().required(),
         JWT_ACCESS_SECRET: Joi.string().required(),
         JWT_REFRESH_SECRET: Joi.string().required(),
-        JWT_ACCESS_EXPIRES_IN: Joi.string().default('15m'),
-        JWT_REFRESH_EXPIRES_IN: Joi.string().default('7d'),
+        JWT_ACCESS_EXPIRES_IN: Joi.string().default("15m"),
+        JWT_REFRESH_EXPIRES_IN: Joi.string().default("7d"),
       }),
     }),
 
     // Structured JSON logs — plays nicely with log aggregators like Datadog or CloudWatch
     LoggerModule.forRoot({
       pinoHttp: {
-        level: process.env.NODE_ENV !== 'production' ? 'debug' : 'info',
+        level: process.env.NODE_ENV !== "production" ? "debug" : "info",
         transport:
-          process.env.NODE_ENV !== 'production'
-            ? { target: 'pino-pretty', options: { colorize: true } }
+          process.env.NODE_ENV !== "production"
+            ? { target: "pino-pretty", options: { colorize: true } }
             : undefined,
       },
     }),
@@ -72,4 +74,3 @@ import * as Joi from 'joi';
   ],
 })
 export class AppModule {}
-

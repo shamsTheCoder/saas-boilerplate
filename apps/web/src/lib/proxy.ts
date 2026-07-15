@@ -1,10 +1,16 @@
-import 'server-only';
-import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
-import { clearAccessToken, decodeToken, getAccessToken, isTokenExpired, setAccessToken } from '@/lib/auth';
-import { ROUTES } from '@/constants/routes';
+import "server-only";
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import {
+  clearAccessToken,
+  decodeToken,
+  getAccessToken,
+  isTokenExpired,
+  setAccessToken,
+} from "@/lib/auth";
+import { ROUTES } from "@/constants/routes";
 
-const API_URL = process.env.API_URL ?? 'http://localhost:3001';
+const API_URL = process.env.API_URL ?? "http://localhost:3001";
 
 /**
  * Route guard — must be called at the top of every authenticated layout.
@@ -42,14 +48,17 @@ export async function proxy(): Promise<{ userId: string }> {
   // We forward ALL cookies from the Next.js request to NestJS so it can
   // read the httpOnly refresh_token cookie it set during login.
   const cookieStore = await cookies();
-  const allCookies = cookieStore.getAll().map((c) => `${c.name}=${c.value}`).join('; ');
+  const allCookies = cookieStore
+    .getAll()
+    .map((c) => `${c.name}=${c.value}`)
+    .join("; ");
 
   try {
     const refreshRes = await fetch(`${API_URL}/api/v1/auth/refresh`, {
-      method: 'POST',
+      method: "POST",
       headers: { Cookie: allCookies },
-      credentials: 'include',
-      cache: 'no-store',
+      credentials: "include",
+      cache: "no-store",
     });
 
     if (!refreshRes.ok) {
@@ -57,23 +66,25 @@ export async function proxy(): Promise<{ userId: string }> {
       redirect(ROUTES.LOGIN);
     }
 
-    const { accessToken: newAccessToken } = (await refreshRes.json()) as { accessToken: string };
+    const { accessToken: newAccessToken } = (await refreshRes.json()) as {
+      accessToken: string;
+    };
     await setAccessToken(newAccessToken);
 
     // ✅ BUG FIX: Forward the rotated refresh_token cookie from NestJS back to the browser.
     // Without this, the browser's refresh_token is stale after the first silent refresh.
     // The next refresh attempt would detect "reuse" and invalidate the entire session.
-    const setCookieHeader = refreshRes.headers.get('set-cookie');
+    const setCookieHeader = refreshRes.headers.get("set-cookie");
     if (setCookieHeader) {
       const match = setCookieHeader.match(/refresh_token=([^;]+)/);
       if (match) {
-        const isProduction = process.env.NODE_ENV === 'production';
-        cookieStore.set('refresh_token', match[1], {
+        const isProduction = process.env.NODE_ENV === "production";
+        cookieStore.set("refresh_token", match[1], {
           httpOnly: true,
           secure: isProduction,
-          sameSite: 'strict',
+          sameSite: "strict",
           maxAge: 7 * 24 * 60 * 60,
-          path: '/',
+          path: "/",
         });
       }
     }
@@ -90,4 +101,3 @@ export async function proxy(): Promise<{ userId: string }> {
     redirect(ROUTES.LOGIN);
   }
 }
-

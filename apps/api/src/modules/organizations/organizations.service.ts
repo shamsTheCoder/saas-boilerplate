@@ -4,15 +4,15 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
-} from '@nestjs/common';
-import { PrismaService } from '@/prisma/prisma.service';
-import { AuditLogService } from '@/modules/audit/audit.service';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { OrgRole } from '@prisma/client';
-import { CreateOrgDto } from '@/modules/organizations/dto/create-org.dto';
-import { UpdateOrgDto } from '@/modules/organizations/dto/update-org.dto';
-import { InviteMemberDto } from '@/modules/organizations/dto/invite-member.dto';
-import * as crypto from 'crypto';
+} from "@nestjs/common";
+import { PrismaService } from "@/prisma/prisma.service";
+import { AuditLogService } from "@/modules/audit/audit.service";
+import { InjectPinoLogger, PinoLogger } from "nestjs-pino";
+import { OrgRole } from "@prisma/client";
+import { CreateOrgDto } from "@/modules/organizations/dto/create-org.dto";
+import { UpdateOrgDto } from "@/modules/organizations/dto/update-org.dto";
+import { InviteMemberDto } from "@/modules/organizations/dto/invite-member.dto";
+import * as crypto from "crypto";
 
 const INVITATION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
@@ -21,7 +21,8 @@ export class OrganizationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditLog: AuditLogService,
-    @InjectPinoLogger(OrganizationsService.name) private readonly logger: PinoLogger,
+    @InjectPinoLogger(OrganizationsService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   // ─── Slug Generation ──────────────────────────────────────────────────────
@@ -30,11 +31,11 @@ export class OrganizationsService {
     const base = name
       .toLowerCase()
       .trim()
-      .replace(/[^a-z0-9\s-]/g, '')  // strip special chars
-      .replace(/\s+/g, '-')           // spaces → dashes
-      .replace(/-+/g, '-')            // collapse multiple dashes
-      .slice(0, 40);                  // cap at 40 chars before suffix
-    const suffix = crypto.randomBytes(2).toString('hex'); // e.g. "a3f9"
+      .replace(/[^a-z0-9\s-]/g, "") // strip special chars
+      .replace(/\s+/g, "-") // spaces → dashes
+      .replace(/-+/g, "-") // collapse multiple dashes
+      .slice(0, 40); // cap at 40 chars before suffix
+    const suffix = crypto.randomBytes(2).toString("hex"); // e.g. "a3f9"
     return `${base}-${suffix}`;
   }
 
@@ -64,11 +65,14 @@ export class OrganizationsService {
     this.auditLog.log({
       organizationId: result.id,
       userId,
-      action: 'org.created',
+      action: "org.created",
       metadata: { orgId: result.id, name: result.name, slug: result.slug },
     });
 
-    this.logger.info({ userId, orgId: result.id, slug: result.slug }, 'Organization created');
+    this.logger.info(
+      { userId, orgId: result.id, slug: result.slug },
+      "Organization created",
+    );
     return result;
   }
 
@@ -89,7 +93,7 @@ export class OrganizationsService {
           },
         },
       },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: "asc" },
     });
 
     // Filter out soft-deleted orgs
@@ -129,13 +133,16 @@ export class OrganizationsService {
   async updateOrg(orgId: string, userId: string, dto: UpdateOrgDto) {
     const org = await this.prisma.organization.update({
       where: { id: orgId, deletedAt: null },
-      data: { ...(dto.name && { name: dto.name }), ...(dto.logoUrl !== undefined && { logoUrl: dto.logoUrl }) },
+      data: {
+        ...(dto.name && { name: dto.name }),
+        ...(dto.logoUrl !== undefined && { logoUrl: dto.logoUrl }),
+      },
     });
 
     this.auditLog.log({
       organizationId: orgId,
       userId,
-      action: 'org.updated',
+      action: "org.updated",
       metadata: dto as Record<string, unknown>,
     });
 
@@ -152,7 +159,7 @@ export class OrganizationsService {
           select: { id: true, name: true, email: true, avatarUrl: true },
         },
       },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: "asc" },
     });
   }
 
@@ -167,10 +174,17 @@ export class OrganizationsService {
 
     if (existingUser) {
       const alreadyMember = await this.prisma.orgMember.findUnique({
-        where: { userId_organizationId: { userId: existingUser.id, organizationId: orgId } },
+        where: {
+          userId_organizationId: {
+            userId: existingUser.id,
+            organizationId: orgId,
+          },
+        },
       });
       if (alreadyMember) {
-        throw new ConflictException('This user is already a member of the organization');
+        throw new ConflictException(
+          "This user is already a member of the organization",
+        );
       }
     }
 
@@ -179,8 +193,11 @@ export class OrganizationsService {
       where: { email: dto.email, organizationId: orgId },
     });
 
-    const rawToken = crypto.randomBytes(32).toString('hex');
-    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
     const expiresAt = new Date(Date.now() + INVITATION_TTL_MS);
 
     const invitation = await this.prisma.invitation.create({
@@ -195,33 +212,36 @@ export class OrganizationsService {
 
     // STUB: EMAIL_JOB { type: 'invitation', to: dto.email, token: rawToken }
     this.logger.info(
-      { type: 'invitation', to: dto.email, token: rawToken, orgId },
-      'EMAIL_JOB',
+      { type: "invitation", to: dto.email, token: rawToken, orgId },
+      "EMAIL_JOB",
     );
 
     this.auditLog.log({
       organizationId: orgId,
       userId: inviterId,
-      action: 'member.invited',
+      action: "member.invited",
       metadata: { inviteeEmail: dto.email, role: dto.role },
     });
 
-    return { message: 'Invitation sent', invitationId: invitation.id };
+    return { message: "Invitation sent", invitationId: invitation.id };
   }
 
   // ─── Accept Invitation ────────────────────────────────────────────────────
 
   async acceptInvitation(token: string, userId: string) {
-    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
 
     const invitation = await this.prisma.invitation.findUnique({
       where: { tokenHash },
-      include: { organization: { select: { id: true, name: true, slug: true } } },
+      include: {
+        organization: { select: { id: true, name: true, slug: true } },
+      },
     });
 
     if (!invitation || invitation.expiresAt < new Date()) {
-      if (invitation) await this.prisma.invitation.delete({ where: { tokenHash } });
-      throw new BadRequestException('Invalid or expired invitation link');
+      if (invitation)
+        await this.prisma.invitation.delete({ where: { tokenHash } });
+      throw new BadRequestException("Invalid or expired invitation link");
     }
 
     // BUG FIX (SECURITY): Prevent Invitation Hijacking!
@@ -232,21 +252,29 @@ export class OrganizationsService {
       select: { email: true },
     });
 
-    if (!currentUser || currentUser.email.toLowerCase() !== invitation.email.toLowerCase()) {
+    if (
+      !currentUser ||
+      currentUser.email.toLowerCase() !== invitation.email.toLowerCase()
+    ) {
       throw new ForbiddenException(
-        'This invitation was sent to a different email address. Please log in with the correct account to accept it.',
+        "This invitation was sent to a different email address. Please log in with the correct account to accept it.",
       );
     }
 
     // Check if user is already a member (idempotent — return success gracefully)
     const existingMembership = await this.prisma.orgMember.findUnique({
-      where: { userId_organizationId: { userId, organizationId: invitation.organizationId } },
+      where: {
+        userId_organizationId: {
+          userId,
+          organizationId: invitation.organizationId,
+        },
+      },
     });
 
     if (existingMembership) {
       await this.prisma.invitation.delete({ where: { tokenHash } });
       return {
-        message: 'You are already a member of this organization',
+        message: "You are already a member of this organization",
         orgSlug: invitation.organization.slug,
         orgId: invitation.organizationId,
         role: existingMembership.role,
@@ -257,21 +285,28 @@ export class OrganizationsService {
     await this.prisma.$transaction([
       this.prisma.invitation.delete({ where: { tokenHash } }),
       this.prisma.orgMember.create({
-        data: { userId, organizationId: invitation.organizationId, role: invitation.role },
+        data: {
+          userId,
+          organizationId: invitation.organizationId,
+          role: invitation.role,
+        },
       }),
     ]);
 
     this.auditLog.log({
       organizationId: invitation.organizationId,
       userId,
-      action: 'member.joined',
+      action: "member.joined",
       metadata: { role: invitation.role },
     });
 
-    this.logger.info({ userId, orgId: invitation.organizationId }, 'Invitation accepted');
+    this.logger.info(
+      { userId, orgId: invitation.organizationId },
+      "Invitation accepted",
+    );
 
     return {
-      message: 'Successfully joined the organization',
+      message: "Successfully joined the organization",
       orgSlug: invitation.organization.slug,
       orgId: invitation.organizationId,
       role: invitation.role,
@@ -280,23 +315,30 @@ export class OrganizationsService {
 
   // ─── Remove Member ────────────────────────────────────────────────────────
 
-  async removeMember(orgId: string, memberId: string, requestingUserId: string) {
+  async removeMember(
+    orgId: string,
+    memberId: string,
+    requestingUserId: string,
+  ) {
     const memberToRemove = await this.prisma.orgMember.findUnique({
       where: { id: memberId, organizationId: orgId },
     });
 
-    if (!memberToRemove) throw new NotFoundException('Member not found in this organization');
+    if (!memberToRemove)
+      throw new NotFoundException("Member not found in this organization");
 
     // OWNERs cannot be removed — they must transfer ownership first
     if (memberToRemove.role === OrgRole.OWNER) {
       throw new ForbiddenException(
-        'Cannot remove the organization owner. Transfer ownership first.',
+        "Cannot remove the organization owner. Transfer ownership first.",
       );
     }
 
     // A member cannot remove themselves via this endpoint (use a dedicated "leave" endpoint if needed)
     if (memberToRemove.userId === requestingUserId) {
-      throw new ForbiddenException('Use the leave organization endpoint to remove yourself');
+      throw new ForbiddenException(
+        "Use the leave organization endpoint to remove yourself",
+      );
     }
 
     await this.prisma.orgMember.delete({ where: { id: memberId } });
@@ -304,10 +346,13 @@ export class OrganizationsService {
     this.auditLog.log({
       organizationId: orgId,
       userId: requestingUserId,
-      action: 'member.removed',
-      metadata: { removedUserId: memberToRemove.userId, role: memberToRemove.role },
+      action: "member.removed",
+      metadata: {
+        removedUserId: memberToRemove.userId,
+        role: memberToRemove.role,
+      },
     });
 
-    return { message: 'Member removed successfully' };
+    return { message: "Member removed successfully" };
   }
 }

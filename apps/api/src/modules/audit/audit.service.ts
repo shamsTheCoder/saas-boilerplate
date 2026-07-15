@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import { PrismaService } from '@/prisma/prisma.service';
+import { Injectable } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
+import { PrismaService } from "@/prisma/prisma.service";
 
 export interface AuditLogData {
   organizationId: string;
@@ -36,7 +36,7 @@ export class AuditLogService {
       })
       .catch((err) => {
         // Log silently — audit logging must never fail the primary operation
-        console.error('[AuditLogService] Failed to write audit log:', err);
+        console.error("[AuditLogService] Failed to write audit log:", err);
       });
   }
 }

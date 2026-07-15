@@ -1,7 +1,7 @@
-import { SetMetadata } from '@nestjs/common';
-import { OrgRole } from '@prisma/client';
+import { SetMetadata } from "@nestjs/common";
+import { OrgRole } from "@prisma/client";
 
-export const ORG_ROLES_KEY = 'orgRoles';
+export const ORG_ROLES_KEY = "orgRoles";
 
 /**
  * Requires the authenticated user to have one of the specified roles in the target org.
@@ -9,4 +9,5 @@ export const ORG_ROLES_KEY = 'orgRoles';
  *
  * Usage: @OrgRoles(OrgRole.ADMIN, OrgRole.OWNER)
  */
-export const OrgRoles = (...roles: OrgRole[]) => SetMetadata(ORG_ROLES_KEY, roles);
+export const OrgRoles = (...roles: OrgRole[]) =>
+  SetMetadata(ORG_ROLES_KEY, roles);

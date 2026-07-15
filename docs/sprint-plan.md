@@ -21,6 +21,7 @@ git push origin day-XX/<short-name>
 ```
 
 ### Commit Message Convention (Conventional Commits)
+
 ```bash
 feat(auth): add argon2 password hashing
 fix(proxy): handle expired JWT redirect
@@ -32,25 +33,27 @@ docs(readme): add local dev setup instructions
 
 ## Sprint Overview
 
-| Day | Branch | Focus | Difficulty |
-|-----|--------|-------|------------|
-| 1 | `day-01/foundation` | Monorepo + Docker + Prisma Schema | 🟡 Medium |
-| 2 | `day-02/apps-bootstrap` | NestJS + Next.js Bootstrap + Design System | 🟡 Medium |
-| 3 | `day-03/auth-backend` | Full Authentication Backend (7 endpoints) | 🔴 Hard |
-| 4 | `day-04/auth-frontend` | Orval + BFF + Full Auth UI | 🔴 Hard |
-| 5 | `day-05/multitenancy-backend` | Organizations + RBAC + Audit Logging | 🔴 Hard |
-| 6 | `day-06/multitenancy-frontend` | Dashboard + App Shell + Org Switcher + Onboarding | 🔴 Hard |
-| 7 | `day-07/adapters` | BullMQ + Email Adapter + Storage Adapter | 🟡 Medium |
-| 8 | `day-08/uploads-profile` | File Upload UI + Profile Settings + PlanGate | 🟡 Medium |
-| 9 | `day-09/billing` | Stripe Checkout + Webhooks + Billing UI | 🔴 Hard |
-| 10 | `day-10/quality-launch` | Tests + CI/CD + README | 🟡 Medium |
+| Day | Branch                         | Focus                                             | Difficulty |
+| --- | ------------------------------ | ------------------------------------------------- | ---------- |
+| 1   | `day-01/foundation`            | Monorepo + Docker + Prisma Schema                 | 🟡 Medium  |
+| 2   | `day-02/apps-bootstrap`        | NestJS + Next.js Bootstrap + Design System        | 🟡 Medium  |
+| 3   | `day-03/auth-backend`          | Full Authentication Backend (7 endpoints)         | 🔴 Hard    |
+| 4   | `day-04/auth-frontend`         | Orval + BFF + Full Auth UI                        | 🔴 Hard    |
+| 5   | `day-05/multitenancy-backend`  | Organizations + RBAC + Audit Logging              | 🔴 Hard    |
+| 6   | `day-06/multitenancy-frontend` | Dashboard + App Shell + Org Switcher + Onboarding | 🔴 Hard    |
+| 7   | `day-07/adapters`              | BullMQ + Email Adapter + Storage Adapter          | 🟡 Medium  |
+| 8   | `day-08/uploads-profile`       | File Upload UI + Profile Settings + PlanGate      | 🟡 Medium  |
+| 9   | `day-09/billing`               | Stripe Checkout + Webhooks + Billing UI           | 🔴 Hard    |
+| 10  | `day-10/quality-launch`        | Tests + CI/CD + README                            | 🟡 Medium  |
 
 ---
 
 ## Day 1 — Monorepo + Docker + Database Foundation
+
 **Branch**: `day-01/foundation`
 
 ### Tasks
+
 - [ ] Initialize npm workspaces with `"workspaces": ["apps/*", "packages/*"]` in root `package.json`
 - [ ] Configure NX: install `nx`, `@nx/nest`, `@nx/next`, `@nx/js` and create `nx.json`
 - [ ] Scaffold directory structure:
@@ -70,14 +73,17 @@ docs(readme): add local dev setup instructions
 - [ ] Write root `.gitignore`
 
 ### Deliverable
+
 > Running Postgres + Redis via Docker. Full DB schema migrated and validated.
 
 ---
 
 ## Day 2 — Both Apps Bootstrapped + Design System
+
 **Branch**: `day-02/apps-bootstrap`
 
 ### Tasks
+
 - [ ] **NestJS** (`apps/api`):
   - Bootstrap with `@nestjs/cli`
   - Wire `PrismaService` (instantiates `PrismaClient` here only)
@@ -99,17 +105,20 @@ docs(readme): add local dev setup instructions
 - [ ] Configure `nx run-many --target=serve --all --parallel` to run both `api` and `web` simultaneously
 
 ### Deliverable
+
 > `nx run-many --target=serve --all` starts both servers. `/health` returns `{ status: "ok" }`. Design tokens visible in browser.
 
 ---
 
 ## Day 3 — Full Authentication Backend
+
 **Branch**: `day-03/auth-backend`
 
 > [!WARNING]
 > This is the hardest backend day. Start early.
 
 ### Tasks
+
 - [ ] `POST /api/v1/auth/register`
   - Hash password with `argon2`
   - Create `User` with `emailVerified: false`
@@ -141,17 +150,20 @@ docs(readme): add local dev setup instructions
 - [ ] Decorate all endpoints with Swagger `@ApiTags`, `@ApiOperation`, `@ApiResponse`
 
 ### Deliverable
+
 > All 7 auth endpoints working, testable via Swagger UI at `/api/docs`.
 
 ---
 
 ## Day 4 — Orval + BFF + Full Auth UI
+
 **Branch**: `day-04/auth-frontend`
 
 > [!WARNING]
 > This is the hardest frontend day. Wire carefully.
 
 ### Tasks
+
 - [ ] Configure Orval to read NestJS Swagger JSON, generate typed fetch client → `src/lib/api/client.ts`
 - [ ] Implement `src/lib/auth.ts` — `getAccessToken()`, `setTokenCookie()`, `clearCookies()` (server-only helpers)
 - [ ] Implement `src/lib/proxy.ts` — reads JWT cookie, validates with NestJS, calls `redirect(ROUTES.LOGIN)` on failure
@@ -170,14 +182,17 @@ docs(readme): add local dev setup instructions
 - [ ] Implement Zod form validation on all auth forms
 
 ### Deliverable
+
 > Full auth flow works in browser: Register → Verify Email → Login → Redirect to app → Logout.
 
 ---
 
 ## Day 5 — Full Multi-Tenancy Backend
+
 **Branch**: `day-05/multitenancy-backend`
 
 ### Tasks
+
 - [ ] **Organizations API**:
   - `POST /api/v1/orgs` — create org (auto-generate slug, auto-create `OrgMember` as `OWNER`)
   - `GET /api/v1/orgs/:slug` — get org details
@@ -197,17 +212,20 @@ docs(readme): add local dev setup instructions
 - [ ] **Audit Logging**: Wire `AuditLogService` into auth + org actions
 
 ### Deliverable
+
 > Full org + invitation + RBAC system live. Testable via Swagger.
 
 ---
 
 ## Day 6 — Full Multi-Tenancy Frontend
+
 **Branch**: `day-06/multitenancy-frontend`
 
 > [!WARNING]
 > This is the hardest frontend day. Tackle the App Shell first.
 
 ### Tasks
+
 - [ ] **App Shell** (`src/components/layouts/app-shell/`):
   - `sidebar.tsx` with nav items, active state, org branding
   - `header.tsx` with breadcrumbs + user menu
@@ -235,14 +253,17 @@ docs(readme): add local dev setup instructions
 - [ ] Wire `orgs.actions.ts` Server Actions to the Orval client
 
 ### Deliverable
+
 > Full authenticated app works: Login → Onboarding → Dashboard → Org Switcher → Settings.
 
 ---
 
 ## Day 7 — BullMQ + Email & Storage Adapters
+
 **Branch**: `day-07/adapters`
 
 ### Tasks
+
 - [ ] **BullMQ Setup**:
   - Configure `@nestjs/bullmq` with Redis in `QueueModule`
   - Define queue names as constants
@@ -264,14 +285,17 @@ docs(readme): add local dev setup instructions
 - [ ] `POST /api/v1/uploads/avatar` endpoint using Multer + `IStorageService`
 
 ### Deliverable
+
 > Emails send on register/verify/reset. Files upload to local disk. Both adapters swap via env var.
 
 ---
 
 ## Day 8 — File Upload UI + Profile Settings + PlanGate
+
 **Branch**: `day-08/uploads-profile`
 
 ### Tasks
+
 - [ ] **Avatar Upload Component**:
   - Drag-and-drop zone using `react-dropzone`
   - Image preview with circular crop display
@@ -292,11 +316,13 @@ docs(readme): add local dev setup instructions
 - [ ] Wire `PlanGate` into Members settings page (limit members on free plan)
 
 ### Deliverable
+
 > Avatar upload works end-to-end. Profile updates save. PlanGate blocks/allows features correctly.
 
 ---
 
 ## Day 9 — Stripe Full-Stack (Checkout + Webhooks + Billing UI)
+
 **Branch**: `day-09/billing`
 
 > [!WARNING]
@@ -304,6 +330,7 @@ docs(readme): add local dev setup instructions
 > Use `stripe listen --forward-to localhost:3000/api/v1/billing/webhook` for local testing.
 
 ### Tasks
+
 - [ ] **Backend**:
   - Wire Stripe SDK into `BillingModule` via config
   - `POST /api/v1/billing/checkout` — create Stripe Checkout Session, return URL
@@ -320,14 +347,17 @@ docs(readme): add local dev setup instructions
   - Settings → Billing page: current plan, `currentPeriodEnd`, Manage button
 
 ### Deliverable
+
 > Full billing cycle: Select plan → Checkout → Pay → Webhook → DB updated → UI reflects new plan.
 
 ---
 
 ## Day 10 — Tests + CI/CD + README
+
 **Branch**: `day-10/quality-launch`
 
 ### Tasks
+
 - [ ] **Backend E2E Tests** (Supertest):
   - `auth.e2e-spec.ts`: Register → verify email → login → refresh → logout
   - `orgs.e2e-spec.ts`: Create org → invite member → accept invitation
@@ -349,24 +379,26 @@ docs(readme): add local dev setup instructions
 - [ ] **README.md**: Overview, prerequisites, local setup, env variables, NX scripts
 
 ### Deliverable
+
 > Tests pass. CI pipeline is green. Full product ships. 🚀
 
 ---
 
 ## Risk Mitigation
 
-| Risk | Mitigation |
-|---|---|
-| Day 3 or 6 runs long | Push email stubs (Day 3) and onboarding wizard (Day 6) to Day 7/8 |
+| Risk                               | Mitigation                                                             |
+| ---------------------------------- | ---------------------------------------------------------------------- |
+| Day 3 or 6 runs long               | Push email stubs (Day 3) and onboarding wizard (Day 6) to Day 7/8      |
 | Stripe webhooks don't work locally | Use `stripe listen --forward-to localhost:3000/api/v1/billing/webhook` |
-| Orval generation fails | Keep a manual typed fetch wrapper as fallback for auth actions |
-| Behind on Day 5 | Ship basic org CRUD only, defer invitation email to Day 7 |
+| Orval generation fails             | Keep a manual typed fetch wrapper as fallback for auth actions         |
+| Behind on Day 5                    | Ship basic org CRUD only, defer invitation email to Day 7              |
 
 ---
 
 ## Daily Shutdown Checklist
 
 Before closing your laptop every night:
+
 - [ ] All code committed and pushed to remote branch
 - [ ] PR is open on GitHub
 - [ ] No console errors in dev server

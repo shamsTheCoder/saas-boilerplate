@@ -4,12 +4,12 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
-} from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { OrgRole } from '@prisma/client';
-import { PrismaService } from '@/prisma/prisma.service';
-import { ORG_ROLES_KEY } from '@/common/decorators/org-roles.decorator';
-import { RequestUser } from '@/common/decorators/current-user.decorator';
+} from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import { OrgRole } from "@prisma/client";
+import { PrismaService } from "@/prisma/prisma.service";
+import { ORG_ROLES_KEY } from "@/common/decorators/org-roles.decorator";
+import { RequestUser } from "@/common/decorators/current-user.decorator";
 
 /**
  * Verifies the authenticated user has the required OrgRole in the requested org.
@@ -28,10 +28,10 @@ export class OrgRolesGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const requiredRoles = this.reflector.getAllAndOverride<OrgRole[]>(ORG_ROLES_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const requiredRoles = this.reflector.getAllAndOverride<OrgRole[]>(
+      ORG_ROLES_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
     // If no @OrgRoles() decorator, the guard is a no-op
     if (!requiredRoles || requiredRoles.length === 0) return true;
@@ -52,7 +52,8 @@ export class OrgRolesGuard implements CanActivate {
       organizationId = org.id;
     }
 
-    if (!organizationId) throw new ForbiddenException('Organization context required');
+    if (!organizationId)
+      throw new ForbiddenException("Organization context required");
 
     const membership = await this.prisma.orgMember.findUnique({
       where: { userId_organizationId: { userId: user.userId, organizationId } },
@@ -60,7 +61,7 @@ export class OrgRolesGuard implements CanActivate {
     });
 
     if (!membership) {
-      throw new ForbiddenException('You are not a member of this organization');
+      throw new ForbiddenException("You are not a member of this organization");
     }
 
     // Role hierarchy: OWNER > ADMIN > MEMBER
@@ -77,7 +78,7 @@ export class OrgRolesGuard implements CanActivate {
 
     if (!meetsRequirement) {
       throw new ForbiddenException(
-        `Insufficient role. Required: ${requiredRoles.join(' or ')}. Your role: ${membership.role}`,
+        `Insufficient role. Required: ${requiredRoles.join(" or ")}. Your role: ${membership.role}`,
       );
     }
 
