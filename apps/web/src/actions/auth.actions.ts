@@ -120,17 +120,19 @@ export async function registerAction(
 
   try {
     const res = await apiPost('/auth/register', parsed.data);
-    const body = await res.json() as { message?: string; statusCode?: number };
 
     if (!res.ok) {
       return { success: false, error: 'Registration failed. Please try again.' };
     }
 
-    // Automatically log the user in and redirect to dashboard
-    return loginAction(prevState, formData);
+    // Automatically log the user in after successful registration
+    // NOTE: loginAction's redirect() throws a special Next.js error — we must NOT catch it
   } catch {
     return { success: false, error: 'Unable to connect to the server. Please try again.' };
   }
+
+  // Call loginAction OUTSIDE of try/catch so its redirect() propagates correctly
+  return loginAction(prevState, formData);
 }
 
 // ─── Logout ───────────────────────────────────────────────────────────────
@@ -140,16 +142,20 @@ export async function logoutAction(): Promise<void> {
   const accessToken = cookieStore.get('access_token')?.value;
   const allCookies = cookieStore.getAll().map((c) => `${c.name}=${c.value}`).join('; ');
 
-  if (accessToken) {
-    try {
-      await fetch(`${API_URL}/api/v1/auth/logout`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${accessToken}`, Cookie: allCookies },
-        cache: 'no-store',
-      });
-    } catch {
-      // Best-effort — clear cookies regardless
-    }
+  // BUG FIX: We MUST call the backend logout even if accessToken is missing,
+  // otherwise the refresh_token is left alive in the database for 7 days!
+  // The backend /logout endpoint is @Public() and only needs the cookie.
+  try {
+    await fetch(`${API_URL}/api/v1/auth/logout`, {
+      method: 'POST',
+      headers: {
+        ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+        Cookie: allCookies,
+      },
+      cache: 'no-store',
+    });
+  } catch {
+    // Best-effort — clear local cookies regardless
   }
 
   await clearAccessToken();

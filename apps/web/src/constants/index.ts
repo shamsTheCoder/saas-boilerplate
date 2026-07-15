@@ -1,15 +1,9 @@
 // App-wide constants — keeps magic strings out of the components
 export const APP_NAME = 'SaaS Boilerplate';
 
-export const ROUTES = {
-  home: '/',
-  login: '/login',
-  signup: '/signup',
-  forgotPassword: '/forgot-password',
-  dashboard: (orgSlug: string) => `/${orgSlug}/dashboard`,
-  settings:  (orgSlug: string) => `/${orgSlug}/settings`,
-  members:   (orgSlug: string) => `/${orgSlug}/members`,
-} as const;
+// ROUTES — canonical source is @/constants/routes.ts
+// Re-export for convenience so components don't need two imports
+export { ROUTES } from '@/constants/routes';
 
 export const API_ROUTES = {
   health: '/health',
@@ -20,3 +14,4 @@ export const API_ROUTES = {
     logout: '/api/v1/auth/logout',
   },
 } as const;
+

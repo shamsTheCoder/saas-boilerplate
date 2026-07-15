@@ -6,6 +6,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Logger } from 'nestjs-pino';
 import helmet from 'helmet';
 import { GlobalExceptionFilter } from '@/filters/global-exception.filter';
+import { PrismaExceptionFilter } from '@/filters/prisma-exception.filter';
 import { HttpAdapterHost } from '@nestjs/core';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cookieParser = require('cookie-parser');
@@ -51,8 +52,13 @@ async function bootstrap() {
   );
 
   // Catch all unhandled exceptions and log them properly
+  // PrismaExceptionFilter must come FIRST — NestJS applies filters in REVERSE registration order
+  // so the last registered is the outermost catch. We want Prisma errors handled before the generic filter.
   const httpAdapter = app.get(HttpAdapterHost);
-  app.useGlobalFilters(new GlobalExceptionFilter(httpAdapter, app.get(Logger)));
+  app.useGlobalFilters(
+    new GlobalExceptionFilter(httpAdapter, app.get(Logger)),
+    new PrismaExceptionFilter(),
+  );
 
   // Auto-generate Swagger docs at /api/docs — super helpful during development
   const swaggerConfig = new DocumentBuilder()

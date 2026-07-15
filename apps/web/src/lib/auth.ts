@@ -32,7 +32,11 @@ export async function setAccessToken(token: string): Promise<void> {
     httpOnly: true,
     secure: isProduction,
     sameSite: 'strict',
-    maxAge: COOKIE_MAX_AGE,
+    // BUG FIX: Must live longer than the 15min JWT TTL!
+    // If the browser deletes the cookie at 15 minutes, proxy.ts gets undefined
+    // and instantly redirects to login, meaning silent refresh NEVER runs.
+    // We set this to 7 days to match the refresh token lifetime.
+    maxAge: 7 * 24 * 60 * 60,
     path: '/',
   });
 }
@@ -55,12 +59,23 @@ export function decodeToken(token: string): TokenUser | null {
   try {
     const payload = token.split('.')[1];
     if (!payload) return null;
-    const decoded = JSON.parse(Buffer.from(payload, 'base64url').toString('utf-8'));
-    return decoded as TokenUser;
+    const decoded = JSON.parse(Buffer.from(payload, 'base64url').toString('utf-8')) as {
+      sub?: string;
+      exp?: number;
+      iat?: number;
+    };
+    // JWT standard uses `sub` for the subject (userId) — map it explicitly
+    if (!decoded.sub || !decoded.exp) return null;
+    return {
+      userId: decoded.sub,
+      exp: decoded.exp,
+      iat: decoded.iat ?? 0,
+    };
   } catch {
     return null;
   }
 }
+
 
 /**
  * Check if a decoded JWT is expired.

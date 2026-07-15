@@ -60,6 +60,24 @@ export async function proxy(): Promise<{ userId: string }> {
     const { accessToken: newAccessToken } = (await refreshRes.json()) as { accessToken: string };
     await setAccessToken(newAccessToken);
 
+    // ✅ BUG FIX: Forward the rotated refresh_token cookie from NestJS back to the browser.
+    // Without this, the browser's refresh_token is stale after the first silent refresh.
+    // The next refresh attempt would detect "reuse" and invalidate the entire session.
+    const setCookieHeader = refreshRes.headers.get('set-cookie');
+    if (setCookieHeader) {
+      const match = setCookieHeader.match(/refresh_token=([^;]+)/);
+      if (match) {
+        const isProduction = process.env.NODE_ENV === 'production';
+        cookieStore.set('refresh_token', match[1], {
+          httpOnly: true,
+          secure: isProduction,
+          sameSite: 'strict',
+          maxAge: 7 * 24 * 60 * 60,
+          path: '/',
+        });
+      }
+    }
+
     const newDecoded = decodeToken(newAccessToken);
     if (!newDecoded) {
       await clearAccessToken();
@@ -72,3 +90,4 @@ export async function proxy(): Promise<{ userId: string }> {
     redirect(ROUTES.LOGIN);
   }
 }
+

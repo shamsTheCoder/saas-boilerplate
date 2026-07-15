@@ -21,6 +21,7 @@ import { Throttle } from '@nestjs/throttler';
 import { Request, Response } from 'express';
 import { AuthService } from '@/auth/auth.service';
 import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
+import { Public } from '@/auth/public.decorator';
 import { RegisterDto } from '@/auth/dto/register.dto';
 import { LoginDto } from '@/auth/dto/login.dto';
 import { VerifyEmailDto } from '@/auth/dto/verify-email.dto';
@@ -35,6 +36,7 @@ export class AuthController {
   // ─── POST /auth/register ──────────────────────────────────────────────────
 
   @Post('register')
+  @Public()
   @HttpCode(HttpStatus.CREATED)
   @Throttle({ default: { limit: 10, ttl: 3_600_000 } }) // 10 per hour per IP
   @ApiOperation({ summary: 'Register a new user account' })
@@ -47,6 +49,7 @@ export class AuthController {
   // ─── POST /auth/login ─────────────────────────────────────────────────────
 
   @Post('login')
+  @Public()
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 5, ttl: 900_000 } }) // 5 per 15 min per IP (brute-force protection)
   @ApiOperation({ summary: 'Log in and receive an access token + httpOnly refresh cookie' })
@@ -64,6 +67,7 @@ export class AuthController {
   // ─── POST /auth/refresh ───────────────────────────────────────────────────
 
   @Post('refresh')
+  @Public()
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 20, ttl: 900_000 } }) // 20 per 15 min — legitimate clients refresh often
   @ApiCookieAuth('refresh_token')
@@ -77,6 +81,7 @@ export class AuthController {
   // ─── POST /auth/logout ────────────────────────────────────────────────────
 
   @Post('logout')
+  @Public()
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Log out — deletes the refresh token and clears the cookie' })
   @ApiResponse({ status: 204, description: 'Logged out successfully' })
@@ -87,6 +92,7 @@ export class AuthController {
   // ─── GET /auth/verify-email ───────────────────────────────────────────────
 
   @Get('verify-email')
+  @Public()
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 10, ttl: 3_600_000 } }) // 10 per hour
   @ApiOperation({ summary: 'Verify an email address using the token from the verification link' })
@@ -99,6 +105,7 @@ export class AuthController {
   // ─── POST /auth/forgot-password ───────────────────────────────────────────
 
   @Post('forgot-password')
+  @Public()
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 3, ttl: 3_600_000 } }) // 3 per hour per IP (prevents email bombing)
   @ApiOperation({ summary: 'Request a password reset email (always returns 200 — no email enumeration)' })
@@ -110,6 +117,7 @@ export class AuthController {
   // ─── POST /auth/reset-password ────────────────────────────────────────────
 
   @Post('reset-password')
+  @Public()
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 5, ttl: 900_000 } }) // 5 per 15 min per IP
   @ApiOperation({ summary: 'Reset password using the token from the reset email. Invalidates all active sessions.' })

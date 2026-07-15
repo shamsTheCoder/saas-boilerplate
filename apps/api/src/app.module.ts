@@ -6,6 +6,9 @@ import { LoggerModule } from 'nestjs-pino';
 import { PrismaModule } from '@/prisma/prisma.module';
 import { HealthModule } from '@/health/health.module';
 import { AuthModule } from '@/auth/auth.module';
+import { OrganizationsModule } from '@/modules/organizations/organizations.module';
+import { AuditModule } from '@/modules/audit/audit.module';
+import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
 import configuration from '@/config/configuration';
 import * as Joi from 'joi';
 
@@ -50,6 +53,10 @@ import * as Joi from 'joi';
     PrismaModule,
     HealthModule,
     AuthModule,
+
+    // Feature modules
+    AuditModule,
+    OrganizationsModule,
   ],
   providers: [
     // Apply ThrottlerGuard globally — each auth route overrides limits with @Throttle()
@@ -57,6 +64,12 @@ import * as Joi from 'joi';
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
+    // Apply JwtAuthGuard globally — routes opt-out with @Public()
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
   ],
 })
 export class AppModule {}
+
