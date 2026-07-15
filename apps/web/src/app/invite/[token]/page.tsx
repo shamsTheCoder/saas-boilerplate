@@ -1,10 +1,14 @@
-import type { Metadata } from 'next';
+import type { Metadata } from "next";
 
-export const metadata: Metadata = { title: 'Accept Invitation' };
+export const metadata: Metadata = { title: "Accept Invitation" };
 
 // This page is public — someone clicked an invite link in their email
 // We'll validate the token and show a signup/accept form on Day 5
-export default async function InvitePage({ params }: { params: Promise<{ token: string }> }) {
+export default async function InvitePage({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}) {
   const { token } = await params;
   return (
     <main>
