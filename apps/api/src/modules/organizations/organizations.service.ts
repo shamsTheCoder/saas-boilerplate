@@ -209,7 +209,12 @@ export class OrganizationsService {
     // STUB: EMAIL_JOB { type: 'invitation', to: dto.email, token: rawToken }
     // SECURITY: never log the raw token — mask it
     this.logger.info(
-      { type: "invitation", to: dto.email, tokenMasked: rawToken.slice(0, 8) + '...', orgId },
+      {
+        type: "invitation",
+        to: dto.email,
+        tokenMasked: rawToken.slice(0, 8) + "...",
+        orgId,
+      },
       "EMAIL_JOB",
     );
 

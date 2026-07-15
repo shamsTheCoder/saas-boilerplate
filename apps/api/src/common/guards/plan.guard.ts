@@ -51,7 +51,10 @@ export class PlanGuard implements CanActivate {
       select: { planId: true, status: true },
     });
 
-    if (!subscription || !(['ACTIVE', 'TRIALING'] as string[]).includes(subscription.status)) {
+    if (
+      !subscription ||
+      !(["ACTIVE", "TRIALING"] as string[]).includes(subscription.status)
+    ) {
       throw new ForbiddenException(
         "An active subscription is required to access this feature",
       );
@@ -61,7 +64,9 @@ export class PlanGuard implements CanActivate {
     const requiredPlanIndex = PLAN_HIERARCHY.indexOf(requiredPlan);
 
     if (requiredPlanIndex === -1) {
-      throw new ForbiddenException(`Internal Error: Unknown required plan '${requiredPlan}'`);
+      throw new ForbiddenException(
+        `Internal Error: Unknown required plan '${requiredPlan}'`,
+      );
     }
 
     if (currentPlanIndex === -1 || currentPlanIndex < requiredPlanIndex) {

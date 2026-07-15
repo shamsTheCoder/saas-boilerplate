@@ -55,8 +55,8 @@ export async function setAccessToken(token: string): Promise<void> {
 export async function clearAccessToken(): Promise<void> {
   const cookieStore = await cookies();
   const isProduction = process.env.NODE_ENV === "production";
-  
-  // To reliably delete a secure cookie in modern browsers, 
+
+  // To reliably delete a secure cookie in modern browsers,
   // you must mirror the exact security attributes used when setting it.
   cookieStore.set(ACCESS_TOKEN_COOKIE, "", {
     httpOnly: true,
@@ -77,22 +77,22 @@ export function decodeToken(token: string): TokenUser | null {
   try {
     const payload = token.split(".")[1];
     if (!payload) return null;
-    
+
     // Safely decode base64url using standard Web APIs (Edge-compatible)
     const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
     const jsonPayload = decodeURIComponent(
       atob(base64)
         .split("")
         .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
+        .join(""),
     );
-    
+
     const decoded = JSON.parse(jsonPayload) as {
       sub?: string;
       exp?: number;
       iat?: number;
     };
-    
+
     // JWT standard uses `sub` for the subject (userId) — map it explicitly
     if (!decoded.sub || !decoded.exp) return null;
     return {

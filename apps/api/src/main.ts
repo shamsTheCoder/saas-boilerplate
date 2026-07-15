@@ -61,7 +61,7 @@ async function bootstrap() {
   );
 
   // Auto-generate Swagger docs at /api/docs — only in non-production environments
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== "production") {
     const swaggerConfig = new DocumentBuilder()
       .setTitle("SaaS Boilerplate API")
       .setDescription(

@@ -3,7 +3,10 @@ import type { NextRequest } from "next/server";
 import { decodeToken, isTokenExpired } from "@/lib/auth";
 import { ROUTES } from "@/constants/routes";
 
-const API_URL = process.env.API_INTERNAL_URL ?? process.env.API_URL ?? "http://localhost:3001";
+const API_URL =
+  process.env.API_INTERNAL_URL ??
+  process.env.API_URL ??
+  "http://localhost:3001";
 
 // Auth routes (redirect to home if already logged in)
 const authRoutes = [ROUTES.LOGIN, ROUTES.REGISTER, ROUTES.FORGOT_PASSWORD];
@@ -36,7 +39,7 @@ export async function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   // CRITICAL SECURITY FIX: Strip incoming internal headers to prevent Header Spoofing (Smuggling)
   requestHeaders.delete("x-middleware-access-token");
-  
+
   let newCookiesToSet: string[] = [];
 
   // 3. Perform silent refresh if needed
@@ -58,7 +61,7 @@ export async function proxy(request: NextRequest) {
         const data = await refreshRes.json();
         finalAccessToken = data.accessToken as string;
         finalDecoded = decodeToken(finalAccessToken);
-        
+
         // Pass the fresh token down to the Next.js Server Components
         requestHeaders.set("x-middleware-access-token", finalAccessToken);
         newCookiesToSet = refreshRes.headers.getSetCookie();
@@ -111,12 +114,15 @@ export async function proxy(request: NextRequest) {
     });
   }
 
-  const isValidSession = finalAccessToken && finalDecoded && !isTokenExpired(finalDecoded);
+  const isValidSession =
+    finalAccessToken && finalDecoded && !isTokenExpired(finalDecoded);
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
 
   // 4. If they are on an auth page but already logged in, redirect them out
   if (isAuthRoute && isValidSession) {
-    const redirectRes = NextResponse.redirect(new URL(ROUTES.HOME, request.url));
+    const redirectRes = NextResponse.redirect(
+      new URL(ROUTES.HOME, request.url),
+    );
     // Must copy over any fresh cookies we just set
     if (tokenNeedsRefresh && finalAccessToken) {
       const nestCookies = response.headers.getSetCookie();
