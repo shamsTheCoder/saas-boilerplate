@@ -186,7 +186,14 @@ export async function logoutAction(): Promise<void> {
   }
 
   await clearAccessToken();
-  cookieStore.delete("refresh_token");
+  const isProduction = process.env.NODE_ENV === "production";
+  cookieStore.set("refresh_token", "", {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: "strict",
+    maxAge: 0,
+    path: "/",
+  });
   redirect(ROUTES.LOGIN);
 }
 

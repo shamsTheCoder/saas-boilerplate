@@ -80,7 +80,7 @@ export class OrganizationsService {
 
   async getMyOrgs(userId: string) {
     const memberships = await this.prisma.orgMember.findMany({
-      where: { userId },
+      where: { userId, organization: { deletedAt: null } },
       include: {
         organization: {
           select: {
@@ -89,24 +89,20 @@ export class OrganizationsService {
             slug: true,
             logoUrl: true,
             createdAt: true,
-            deletedAt: true,
           },
         },
       },
       orderBy: { createdAt: "asc" },
     });
 
-    // Filter out soft-deleted orgs
-    return memberships
-      .filter((m) => m.organization.deletedAt === null)
-      .map((m) => ({
-        id: m.organization.id,
-        name: m.organization.name,
-        slug: m.organization.slug,
-        logoUrl: m.organization.logoUrl,
-        role: m.role,
-        joinedAt: m.createdAt,
-      }));
+    return memberships.map((m) => ({
+      id: m.organization.id,
+      name: m.organization.name,
+      slug: m.organization.slug,
+      logoUrl: m.organization.logoUrl,
+      role: m.role,
+      joinedAt: m.createdAt,
+    }));
   }
 
   // ─── Get Organization By Slug ─────────────────────────────────────────────
@@ -211,8 +207,9 @@ export class OrganizationsService {
     });
 
     // STUB: EMAIL_JOB { type: 'invitation', to: dto.email, token: rawToken }
+    // SECURITY: never log the raw token — mask it
     this.logger.info(
-      { type: "invitation", to: dto.email, token: rawToken, orgId },
+      { type: "invitation", to: dto.email, tokenMasked: rawToken.slice(0, 8) + '...', orgId },
       "EMAIL_JOB",
     );
 

@@ -55,8 +55,12 @@ export class OrgRolesGuard implements CanActivate {
     if (!organizationId)
       throw new ForbiddenException("Organization context required");
 
-    const membership = await this.prisma.orgMember.findUnique({
-      where: { userId_organizationId: { userId: user.userId, organizationId } },
+    const membership = await this.prisma.orgMember.findFirst({
+      where: {
+        userId: user.userId,
+        organizationId,
+        organization: { deletedAt: null },
+      },
       select: { role: true },
     });
 

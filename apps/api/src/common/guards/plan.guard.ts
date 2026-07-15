@@ -33,7 +33,8 @@ export class PlanGuard implements CanActivate {
     if (!requiredPlan) return true;
 
     const request = context.switchToHttp().getRequest();
-    const user = request.user as RequestUser;
+    // user is resolved by JwtAuthGuard — kept for future per-user plan checks
+    // const user = request.user as RequestUser;
 
     // Prefer the organizationId already resolved by OrgRolesGuard
     const organizationId: string | undefined =
@@ -50,7 +51,7 @@ export class PlanGuard implements CanActivate {
       select: { planId: true, status: true },
     });
 
-    if (!subscription || subscription.status !== "ACTIVE") {
+    if (!subscription || !(['ACTIVE', 'TRIALING'] as string[]).includes(subscription.status)) {
       throw new ForbiddenException(
         "An active subscription is required to access this feature",
       );
@@ -59,7 +60,11 @@ export class PlanGuard implements CanActivate {
     const currentPlanIndex = PLAN_HIERARCHY.indexOf(subscription.planId);
     const requiredPlanIndex = PLAN_HIERARCHY.indexOf(requiredPlan);
 
-    if (currentPlanIndex < requiredPlanIndex) {
+    if (requiredPlanIndex === -1) {
+      throw new ForbiddenException(`Internal Error: Unknown required plan '${requiredPlan}'`);
+    }
+
+    if (currentPlanIndex === -1 || currentPlanIndex < requiredPlanIndex) {
       throw new ForbiddenException(
         `This feature requires the '${requiredPlan}' plan. You are on '${subscription.planId}'.`,
       );

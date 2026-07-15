@@ -1,5 +1,5 @@
 import "server-only";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 const ACCESS_TOKEN_COOKIE = "access_token";
 const COOKIE_MAX_AGE = 15 * 60; // 15 minutes — matches the JWT TTL on NestJS
@@ -11,11 +11,19 @@ export interface TokenUser {
 }
 
 /**
- * Read the access token from the httpOnly server-side cookie.
- * Returns undefined if no cookie is set.
+ * Read the access token from the httpOnly server-side cookie or middleware headers.
+ * Returns undefined if no token is found.
  * Marked `server-only` — cannot be imported by Client Components.
  */
 export async function getAccessToken(): Promise<string | undefined> {
+  // 1. Check if the Edge proxy (middleware) just refreshed the token and passed it down via headers
+  const headersList = await headers();
+  const middlewareToken = headersList.get("x-middleware-access-token");
+  if (middlewareToken) {
+    return middlewareToken;
+  }
+
+  // 2. Otherwise, fall back to the browser's current cookie
   const cookieStore = await cookies();
   return cookieStore.get(ACCESS_TOKEN_COOKIE)?.value;
 }
@@ -46,7 +54,17 @@ export async function setAccessToken(token: string): Promise<void> {
  */
 export async function clearAccessToken(): Promise<void> {
   const cookieStore = await cookies();
-  cookieStore.delete(ACCESS_TOKEN_COOKIE);
+  const isProduction = process.env.NODE_ENV === "production";
+  
+  // To reliably delete a secure cookie in modern browsers, 
+  // you must mirror the exact security attributes used when setting it.
+  cookieStore.set(ACCESS_TOKEN_COOKIE, "", {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: "strict",
+    maxAge: 0,
+    path: "/",
+  });
 }
 
 /**
@@ -59,13 +77,22 @@ export function decodeToken(token: string): TokenUser | null {
   try {
     const payload = token.split(".")[1];
     if (!payload) return null;
-    const decoded = JSON.parse(
-      Buffer.from(payload, "base64url").toString("utf-8"),
-    ) as {
+    
+    // Safely decode base64url using standard Web APIs (Edge-compatible)
+    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    
+    const decoded = JSON.parse(jsonPayload) as {
       sub?: string;
       exp?: number;
       iat?: number;
     };
+    
     // JWT standard uses `sub` for the subject (userId) — map it explicitly
     if (!decoded.sub || !decoded.exp) return null;
     return {

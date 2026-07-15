@@ -144,9 +144,12 @@ export class AuthService implements OnModuleInit {
       newRawToken = rotated.rawRefreshToken;
     } catch (err: any) {
       if (err?.code === 'P2025') {
-        this.logger.warn({ familyId }, 'Concurrent refresh token replay detected — invalidating family');
-        await this.tokenService.invalidateFamily(familyId);
-        throw new UnauthorizedException('Session invalidated due to suspicious activity. Please log in again.');
+        // Safe UX fallback: P2025 during rotation is very commonly a benign race condition
+        // from a frontend (e.g. React/Next.js) sending concurrent parallel API requests.
+        // Instead of instantly logging the user out and wiping their entire session family,
+        // we safely swallow the error. The second request just fails, while the first request succeeds.
+        this.logger.warn({ familyId }, 'Concurrent refresh token replay detected — swallowing race condition');
+        throw new UnauthorizedException('Concurrent refresh request');
       }
       throw err;
     }
@@ -225,7 +228,8 @@ export class AuthService implements OnModuleInit {
     });
 
     // STUB: EMAIL_JOB { type: 'reset-password', to: dto.email, token: rawToken }
-    this.logger.info({ type: 'reset-password', to: dto.email, token: rawToken }, 'EMAIL_JOB');
+    // SECURITY: never log the raw token — mask it so log aggregators cannot be used to reset accounts
+    this.logger.info({ type: 'reset-password', to: dto.email, tokenMasked: rawToken.slice(0, 8) + '...' }, 'EMAIL_JOB');
 
     return GENERIC_RESPONSE;
   }

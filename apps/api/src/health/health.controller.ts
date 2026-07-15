@@ -25,7 +25,7 @@ export class HealthController {
   check() {
     return this.health.check([
       // Ping the database — if this fails, the app is effectively down
-      () => this.prismaHealth.pingCheck('database', this.prisma),
+      () => this.prismaHealth.pingCheck('database', this.prisma.client),
 
       // Make sure Redis is up — the job queue depends on it
       () => this.redisHealth.isHealthy('redis'),
