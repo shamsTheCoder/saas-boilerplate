@@ -136,7 +136,7 @@ export default function HomePage() {
           </p>
 
           <div className={s.ctas}>
-            <Link href={ROUTES.login} className={s.ctaPrimary}>
+            <Link href={ROUTES.LOGIN} className={s.ctaPrimary}>
               Start building <LuArrowRight size={16} />
             </Link>
             <a
