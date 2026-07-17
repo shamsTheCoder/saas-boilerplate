@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { decodeToken, isTokenExpired } from "@/lib/auth";
 import { ROUTES } from "@/constants/routes";
 
+
 const API_URL =
   process.env.API_INTERNAL_URL ??
   process.env.API_URL ??
@@ -132,8 +133,21 @@ export async function proxy(request: NextRequest) {
   }
 
   // Note: We do not do hard protection (redirecting to /login) for `(app)` routes in middleware here.
-  // We leave that to `proxy.ts` (the layout guard) so it can utilize Next.js Server Component boundaries
-  // perfectly. `proxy.ts` will just see that the token is valid (thanks to middleware) or missing.
+  // We leave that to `lib/proxy.ts` (the layout guard) so it can utilize Next.js Server Component boundaries
+  // perfectly. `lib/proxy.ts` will just see that the token is valid (thanks to middleware) or missing.
 
   return response;
 }
+
+/**
+ * BUG 10 FIX: Explicit matcher prevents this middleware from running on every /_next/ chunk,
+ * favicon, image, or API route — eliminating unnecessary overhead on static asset requests.
+ *
+ * Matches: all routes EXCEPT /_next/, /static/, files with extensions (images/fonts/etc.),
+ * and /api/ (Next.js API routes if ever added).
+ */
+export const config = {
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|otf|eot|css|js|map)$).*)",
+  ],
+};

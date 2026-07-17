@@ -1,6 +1,7 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { forgotPasswordAction, FormState } from '@/actions/auth.actions';
@@ -24,7 +25,7 @@ function SubmitButton() {
 }
 
 export default function ForgotPasswordPage() {
-  const [state, action] = useFormState(forgotPasswordAction, initialState);
+  const [state, action] = useActionState(forgotPasswordAction, initialState);
 
   return (
     <div className={styles.formCard}>

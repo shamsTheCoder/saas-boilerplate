@@ -11,7 +11,13 @@ import {
   resetPasswordSchema,
 } from "@/lib/validations/auth.schemas";
 
-const API_URL = process.env.API_URL ?? "http://localhost:3001";
+// Prefer the internal Docker/private network URL for server-to-server calls.
+// Falls back to API_URL (public), then localhost for local dev.
+const API_URL =
+  process.env.API_INTERNAL_URL ??
+  process.env.API_URL ??
+  "http://localhost:3001";
+
 
 /**
  * Flat state type — compatible with useFormState in React 18.
@@ -22,6 +28,7 @@ export type FormState = {
   error: string;
   message?: string;
   fieldErrors?: Record<string, string[]>;
+  data?: any;
 };
 
 const INITIAL_STATE: FormState = { success: false, error: "" };
@@ -70,6 +77,9 @@ export async function loginAction(
     };
   }
 
+  // Hoisted outside try/catch so it's available at the redirect call site
+  let firstOrgSlug: string | null = null;
+
   try {
     const res = await apiPost("/auth/login", parsed.data);
     const body = (await res.json()) as { accessToken?: string };
@@ -101,6 +111,21 @@ export async function loginAction(
         });
       }
     }
+
+    // BUG 4 FIX: Smart redirect — query orgs with the fresh token so returning users
+    // go directly to their dashboard instead of bouncing through /onboarding first.
+    try {
+      const orgsRes = await fetch(`${API_URL}/api/v1/orgs/my`, {
+        headers: { Authorization: `Bearer ${body.accessToken}` },
+        cache: "no-store",
+      });
+      if (orgsRes.ok) {
+        const orgs = (await orgsRes.json()) as { slug: string }[];
+        if (orgs.length > 0) firstOrgSlug = orgs[0].slug;
+      }
+    } catch {
+      // Non-critical — fall back to /onboarding if org fetch fails
+    }
   } catch {
     return {
       success: false,
@@ -108,9 +133,15 @@ export async function loginAction(
     };
   }
 
-  // redirect() must be called outside try/catch — it throws a special Next.js error
+  // redirect() must be called outside try/catch — it throws a special Next.js NEXT_REDIRECT error.
+  // Returning users go straight to their dashboard; new users go to onboarding.
+  if (firstOrgSlug) {
+    redirect(ROUTES.DASHBOARD(firstOrgSlug));
+  }
   redirect(ROUTES.ONBOARDING);
 }
+
+
 
 // ─── Register ─────────────────────────────────────────────────────────────
 

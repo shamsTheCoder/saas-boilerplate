@@ -1,6 +1,7 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -49,7 +50,7 @@ function SubmitButton() {
 }
 
 export default function RegisterPage() {
-  const [state, action] = useFormState(registerAction, initialState);
+  const [state, action] = useActionState(registerAction, initialState);
   const [password, setPassword] = useState('');
   const strength = getPasswordStrength(password);
 

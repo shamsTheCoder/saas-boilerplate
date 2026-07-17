@@ -293,6 +293,10 @@ export class OrganizationsService {
           role: invitation.role,
         },
       }),
+      this.prisma.user.update({
+        where: { id: userId },
+        data: { onboardingComplete: true },
+      }),
     ]);
 
     this.auditLog.log({

@@ -24,7 +24,7 @@ import * as Joi from "joi";
           .default("development"),
         API_PORT: Joi.number().default(3001),
         DATABASE_URL: Joi.string().required(),
-        REDIS_URL: Joi.string().required(),
+        REDIS_URL: Joi.string().optional(), // Not yet used — will be required when job queues are added
         JWT_ACCESS_SECRET: Joi.string().required(),
         JWT_REFRESH_SECRET: Joi.string().required(),
         JWT_ACCESS_EXPIRES_IN: Joi.string().default("15m"),

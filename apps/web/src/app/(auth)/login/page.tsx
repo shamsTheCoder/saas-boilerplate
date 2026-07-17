@@ -1,6 +1,7 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { loginAction } from '@/actions/auth.actions';
@@ -50,7 +51,7 @@ function SubmitButton() {
 }
 
 export default function LoginPage() {
-  const [state, action] = useFormState(loginAction, initialState);
+  const [state, action] = useActionState(loginAction, initialState);
 
   return (
     <div className={styles.formCard}>

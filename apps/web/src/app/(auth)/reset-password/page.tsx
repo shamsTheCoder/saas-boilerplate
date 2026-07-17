@@ -1,6 +1,7 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -54,7 +55,7 @@ export default function ResetPasswordPage({
     return resetPasswordAction(token, formData);
   };
 
-  const [state, action] = useFormState(boundAction, initialState);
+  const [state, action] = useActionState(boundAction, initialState);
 
   if (state.success) {
     return (
